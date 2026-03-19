@@ -1,0 +1,152 @@
+from dataclasses import fields
+from re import M
+import uuid
+from base_module import BaseMS
+from base_module import SqlUtil
+
+class MsUtil(object):
+    """ -------------------------------------------------------------------
+     * 生成 ON DUPLICATE KEY UPDATE 语句
+     * 只在字段值不同的时候才更新
+     * @Prams fields: 要更新的字段名列表
+    """
+    @staticmethod
+    def ignore(*fields: str) -> str:
+        updates = ",\n".join(
+            f"{field} = IF({field} <> VALUES({field}), VALUES({field}), {field})"
+            for field in fields
+        )
+        sql = f"ON DUPLICATE KEY UPDATE\n{updates}"
+        return sql
+
+    """ -------------------------------------------------------------------
+     * 生成插入sql
+     * @Prams table: 表名
+     * @Prams fields: 列名列表
+    """
+    @staticmethod
+    def insert_sql(table: str, fields: list[str]) -> str:
+        """
+        生成 MySQL 插入 SQL
+        :param table: 表名
+        :param fields: 列名列表
+        :return: INSERT SQL 字符串
+        """
+        cols = ", ".join(f"`{c}`" for c in fields)
+        placeholders = ", ".join(["%s"] * len(fields))
+        sql = f"INSERT INTO {table} ({cols}) VALUES ({placeholders})"
+        return sql
+
+    @staticmethod
+    def insert_temporary_table(db:BaseMS, data:list[list], fields:list[tuple[str, str]]) -> str:
+        table = f"temporary_{uuid.uuid4().hex}"
+        fields_sql = SqlUtil.create_fields(fields)
+
+        sql = f"CREATE TEMPORARY TABLE {table} {fields_sql} "
+        db.execute(sql)
+
+        fields = [field[0] for field in fields]
+        MsUtil.insert_table(db,table,fields,data)
+        return table
+
+    @staticmethod
+    def insert(db:BaseMS, table: str, fields: list[str], data: list[list]):
+        if not fields or len(fields) == 0:
+            raise Exception("字段列表不能为空")
+
+        if not data or len(data) == 0 :
+            return
+
+        col_num = len(fields)
+        for i, cur in enumerate(data):
+            if len(cur) != col_num:
+                raise ValueError(f"第 {i} 行数据列数 {len(cur)} 与字段数 {col_num} 不一致")
+
+        sql = MsUtil.insert_sql(table, fields)
+        db.execute(sql, data)
+
+    @staticmethod
+    def insert_dict(db:BaseMS, table: str,data: list[dict[str, any]]):
+        if not data or len(data) == 0 :
+            return
+
+        col_num = 0
+        for i, cur in enumerate(data):
+            if col_num == 0:
+                col_num = len(cur.keys())
+            if len(cur.keys()) != col_num:
+                raise ValueError(f"第 {i} 行数据列数 {len(cur)} 与字段数 {col_num} 不一致")
+
+        fields = list(data[0].keys())
+        insert_data = [[d[f] for f in fields] for d in data]
+        MsUtil.insert(db, table, fields, insert_data)
+
+    # 获取建表语句
+    @staticmethod
+    def get_create_table_sql(db:BaseMS, table: str) -> str:
+        sql = f"SHOW CREATE TABLE {table}"
+        return  db.queryRow(sql)[1] 
+
+    @staticmethod
+    def get_primary_key_fields(db:BaseMS, db_name:str, table: str) -> str:
+        sql = f"""
+            SELECT
+                COLUMN_NAME
+            FROM information_schema.KEY_COLUMN_USAGE
+            WHERE TABLE_SCHEMA = '{db_name}'
+            AND TABLE_NAME = '{table}'
+            AND CONSTRAINT_NAME = 'PRIMARY'
+            ORDER BY ORDINAL_POSITION;
+        """
+        return db.queryScalar(sql)
+    # 获取两个表的交集字段
+    @staticmethod
+    def get_common_fields(db1:BaseMS, db_name1: str, table1: str, db2:BaseMS, db_name2: str, table2: str):
+        """
+        返回两个表中都存在的字段列表
+        """
+        sql1 = f"""
+            SELECT COLUMN_NAME
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = '{db_name1}' AND TABLE_NAME = '{table1}'
+            ORDER BY ORDINAL_POSITION
+        """
+        fields1 = db1.queryColumn(sql1)  # 假设返回 list，例如 ['id','name','age']
+
+        sql2 = f"""
+            SELECT COLUMN_NAME
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = '{db_name2}' AND TABLE_NAME = '{table2}'
+            ORDER BY ORDINAL_POSITION
+        """
+        fields2 = db2.queryColumn(sql2)
+
+        # 取交集
+        fields = list(set(fields1) & set(fields2))
+        if not fields or len(fields) == 0:
+            raise ValueError("没有找到两个表的公共字段")
+        return fields
+
+    # 同步表数据，同一数据库下
+    @staticmethod
+    def sync_table(db:BaseMS, old_db_name: str, old_table: str, new_db_name: str, new_table: str):
+        fields = MsUtil.get_common_fields(db, old_db_name, old_table, db,new_db_name, new_table)
+        field_str = ", ".join([f"`{f}`" for f in fields])
+        sql = f"""
+            INSERT INTO {new_db_name}.{new_table} ({field_str})
+            SELECT {field_str}
+            FROM {old_db_name}.{old_table}
+        """
+        db.execute(sql)
+
+    @staticmethod
+    def exit_table(db:BaseMS, db_name:str, table: str):
+        sql = f"""
+            SELECT COUNT(*)
+            FROM information_schema.tables
+            WHERE table_schema = '{db_name}'
+            AND table_name = '{table}';
+        """
+        return db.queryScalar(sql)
+
+

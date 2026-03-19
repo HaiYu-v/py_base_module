@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "base_module"          # pip 安装时的包名
+version = "1.0.0"
+description = "基础的工具类"
+authors = [
+    {name = "胡亚北", email = "2239473866@q.com"}
+]
+readme = "README.md"
+requires-python = ">=3.8"
+
+# 依赖
+dependencies = [
+    "clickhouse-driver>=0.2.9",
+    "PyMySQL>=1.1.2",
+    "requests>=2.32.5",
+    "openpyxl>=3.1.5",
+    "matplotlib>=3.7.5",
+    "scipy>=1.10.1",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]

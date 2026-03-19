@@ -1,0 +1,2 @@
+class BeanUtil:
+    pass
