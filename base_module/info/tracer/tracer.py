@@ -82,7 +82,7 @@ class Span:
         name = f"name[{self.name}] " if self.name else ''
         start = datetime.datetime.fromtimestamp(self.start_time).strftime("%Y-%m-%d %H:%M:%S")
         tags_str = ("tags[" + ",".join(f"{k}={v}" for k, v in self.tags.items())+"] ") if self.tags else ""
-        parent_str = f"span[{self.parent_id[:8]}-{self.span_id[:8]}]" if self.parent_id else f"[        -{self.span_id[:8]}]"
+        parent_str = f"span[{self.parent_id[:8]}-{self.span_id[:8]}]" if self.parent_id else f"span[        -{self.span_id[:8]}]"
         error_str = f"error[{self.error.splitlines()[-1]}] " if self.error else ""
         duration_str = f"duration[{self.duration_ms}ms] " if self.duration_ms else ""
         status_str = f"status[{self.status}] " if self.duration_ms else ""
