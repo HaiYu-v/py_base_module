@@ -24,6 +24,7 @@ from .utils.file.table_util import TableUtil
 from .utils.file.file_util import FileUtil
 from .utils.Country_util import CountryUtil
 from .utils.json_util import JsonUtil
+from .info.tracer import tracer
 
 __all__ = [
     "BusinessException",
@@ -52,4 +53,5 @@ __all__ = [
     "TableUtil",
     "CountryUtil",
     "JsonUtil",
+    "tracer",
 ]
