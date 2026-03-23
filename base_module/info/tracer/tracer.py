@@ -112,7 +112,7 @@ _collector = TraceCollector()
 
 
 # ─── 装饰器 ───────────────────────────────────────────────────
-def trace(_func=None, *, name: str = None, tags: dict = None):
+def trace(_func=None, *, tags: dict = None):
     """
     无侵入链路追踪装饰器，支持同步和异步函数。
 
@@ -123,6 +123,11 @@ def trace(_func=None, *, name: str = None, tags: dict = None):
         @trace(name="custom", tags={"service": "order"})
         async def my_async_func(): ...
     """
+
+    if isinstance(_func, str):
+        name = _func
+        _func = None
+
     def decorator(func):
         span_func = f"{func.__qualname__}"
         span_name = name
