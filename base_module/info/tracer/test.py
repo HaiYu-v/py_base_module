@@ -60,12 +60,12 @@ async def get_dashboard():
     return results
 
 
-# # ─── 示例 4: 手动 Span（细粒度控制） ──────────────────────────
-# @trace
-# def process_batch(items: list):
-#     for item in items:
-#         with ManualSpan("func","process.item", tags={"item_id": item}):
-#             time.sleep(0.005)
+# ─── 示例 4: 手动 Span（细粒度控制） ──────────────────────────
+@trace
+def process_batch(items: list):
+    for item in items:
+        with ManualSpan("func","process.item", tags={"item_id": item}):
+            time.sleep(0.005)
 
 
 # ─── 示例 5: 异常捕获 ─────────────────────────────────────────

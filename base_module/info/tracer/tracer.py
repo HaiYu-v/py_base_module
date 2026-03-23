@@ -12,13 +12,29 @@ from contextvars import ContextVar
 from dataclasses import dataclass, field, asdict
 from typing import Optional, Any
 import datetime
+from logging.handlers import TimedRotatingFileHandler
 
 # ─── 日志配置 ────────────────────────────────────────────────
+LOG_FILE = "trace.log"  # 指定日志文件路径
+
 logger = logging.getLogger("tracer")
 if not logger.handlers:
-    handler = logging.StreamHandler()
-    handler.setFormatter(logging.Formatter("%(message)s"))
-    logger.addHandler(handler)
+    # 文件 Handler
+    file_handler = TimedRotatingFileHandler(
+        filename="trace.log",
+        when="midnight",    # 每天滚动：midnight / H（每小时）/ D（每天）
+        interval=1,
+        backupCount=30,      # 保留最近 7 天
+        encoding="utf-8",
+    )
+    file_handler.setFormatter(logging.Formatter("%(message)s"))
+    logger.addHandler(file_handler)
+
+    # 控制台 Handler（可选，不需要就删掉）
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(logging.Formatter("%(message)s"))
+    logger.addHandler(console_handler)
+
     logger.setLevel(logging.INFO)
 
 # ─── Context（跨异步/线程安全） ────────────────────────────────
@@ -192,7 +208,7 @@ def _run_sync(func, span_func, span_name, tags, args, kwargs):
     span, is_root = _make_span(span_func, span_name, tags)
     exc = None
     try:
-        logger.info(span.to_log())
+        print(span.to_log(),end="\n")
         result = func(*args, **kwargs)
         return result
     except Exception as e:
@@ -206,7 +222,7 @@ async def _run_async(func, span_func, span_name, tags, args, kwargs):
     span, is_root = _make_span(span_func, span_name, tags)
     exc = None
     try:
-        logger.info(span.to_log())
+        print(span.to_log(),end="\n")
         result = await func(*args, **kwargs)
         return result
     except Exception as e:
