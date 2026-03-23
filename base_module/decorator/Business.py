@@ -19,7 +19,6 @@ def Business(message: str , code: "ResultEnum" = ResultEnum.ERROR, rethrow: bool
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             try:
-                func.desc = message
                 ts_s = int(time.time() * 1000)
                 try:
                     Log.log(f"====== [{message}] [{func.__name__}]")

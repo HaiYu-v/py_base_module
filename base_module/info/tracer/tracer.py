@@ -2,6 +2,7 @@
 链路追踪系统 - 无侵入式装饰器实现
 用法: @trace 或 @trace(name="custom_name", tags={"key": "val"})
 """
+import inspect
 import time
 import uuid
 import json
@@ -14,6 +15,9 @@ from typing import Optional, Any
 import datetime
 import os
 from logging.handlers import TimedRotatingFileHandler
+
+from base_module.exception.Business_exception import BusinessException
+from base_module.info.log import Log
 
 # ─── 日志配置 ────────────────────────────────────────────────
 LOG_FILE = r"log/trace.log"  # 指定日志文件路径
@@ -146,7 +150,7 @@ def trace(_func, tags: dict = None):
     def decorator(func):
         span_func = f"{func.__qualname__}"
         span_name = name
-
+        func.desc = name
         if _is_async(func):
             @functools.wraps(func)
             async def async_wrapper(*args, **kwargs):
@@ -209,28 +213,36 @@ def _run_sync(func, span_func, span_name, tags, args, kwargs):
     span, is_root = _make_span(span_func, span_name, tags)
     exc = None
     try:
-        print(span.to_log(),end="\n")
+        Log.log(f"====== [{span.name}] [{func.__name__}]")
         result = func(*args, **kwargs)
         return result
     except Exception as e:
-        exc = e
-        raise
+        # 获取被装饰函数调用堆栈，跳过 wrapper 自身
+        trace = inspect.trace()
+        # 构建异常
+        exc = BusinessException(span_name,None, e, trace)
+        raise exc from e
     finally:
         _finish_span(span, is_root, exc)
+        Log.log(f"****** [{span.name}] [{func.__name__}] [{span.duration_ms}ms]")
 
 
 async def _run_async(func, span_func, span_name, tags, args, kwargs):
     span, is_root = _make_span(span_func, span_name, tags)
     exc = None
     try:
-        print(span.to_log(),end="\n")
+        Log.log(f"====== [{span.name}] [{func.__name__}]")
         result = await func(*args, **kwargs)
         return result
     except Exception as e:
-        exc = e
-        raise
+        # 获取被装饰函数调用堆栈，跳过 wrapper 自身
+        trace = inspect.trace()
+        # 构建异常
+        exc = BusinessException(span_name,None, e, trace)
+        raise exc from e
     finally:
         _finish_span(span, is_root, exc)
+        Log.log(f"****** [{span.name}] [{func.__name__}] [{span.duration_ms}ms]")
 
 
 def _is_async(func) -> bool:
