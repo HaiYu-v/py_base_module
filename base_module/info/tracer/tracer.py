@@ -62,7 +62,7 @@ class Span:
         start = datetime.datetime.fromtimestamp(self.start_time).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         tags_str = ("[" + ",".join(f"{k}={v}" for k, v in self.tags.items())+"] ") if self.tags else ""
         parent_str = f"[{self.parent_id[:8]}-{self.span_id[:8]}]" if self.parent_id else f"[        -{self.span_id[:8]}]"
-        error_str = f" [{self.error.splitlines()[-1]}] " if self.error else ""
+        error_str = f"[{self.error.splitlines()[-1]}] " if self.error else ""
         return (
             f"[{self.trace_id[:8]}] "
             f"{parent_str} "
@@ -174,8 +174,11 @@ def _make_span(span_func:str, span_name: str, tags: dict) -> tuple[Span, bool]:
 def _finish_span(span: Span, is_root: bool, error: Optional[Exception]):
     stack = _get_stack()
     span.finish(error)
-    if stack and stack[-1] is span:
-        stack.pop()
+    # 不管在不在栈顶，直接移除自己，防止异常场景下栈错位
+    try:
+        stack.remove(span)
+    except ValueError:
+        pass
     if is_root:
         _collector.emit(span)
 
