@@ -12,16 +12,17 @@ from contextvars import ContextVar
 from dataclasses import dataclass, field, asdict
 from typing import Optional, Any
 import datetime
+import os
 from logging.handlers import TimedRotatingFileHandler
 
 # ─── 日志配置 ────────────────────────────────────────────────
-LOG_FILE = "trace.log"  # 指定日志文件路径
-
+LOG_FILE = r"log/trace.log"  # 指定日志文件路径
+os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
 logger = logging.getLogger("tracer")
 if not logger.handlers:
     # 文件 Handler
     file_handler = TimedRotatingFileHandler(
-        filename="trace.log",
+        filename=LOG_FILE,
         when="midnight",    # 每天滚动：midnight / H（每小时）/ D（每天）
         interval=1,
         backupCount=30,      # 保留最近 7 天
