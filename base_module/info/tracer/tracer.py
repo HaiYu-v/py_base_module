@@ -11,6 +11,7 @@ import functools
 from contextvars import ContextVar
 from dataclasses import dataclass, field, asdict
 from typing import Optional, Any
+import datetime
 
 # ─── 日志配置 ────────────────────────────────────────────────
 logger = logging.getLogger("tracer")
@@ -57,20 +58,21 @@ class Span:
             self.error = traceback.format_exc()
 
     def to_log(self) -> str:
-        import datetime
-        name = f"[{self.name}] " if self.name else ""
-        start = datetime.datetime.fromtimestamp(self.start_time).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+        name = f"[{self.name}] " if self.name else ''
+        start = datetime.datetime.fromtimestamp(self.start_time).strftime("%Y-%m-%d %H:%M:%S")
         tags_str = ("[" + ",".join(f"{k}={v}" for k, v in self.tags.items())+"] ") if self.tags else ""
         parent_str = f"[{self.parent_id[:8]}-{self.span_id[:8]}]" if self.parent_id else f"[        -{self.span_id[:8]}]"
         error_str = f"[{self.error.splitlines()[-1]}] " if self.error else ""
+        duration_str = f"[{self.duration_ms}ms] " if self.duration_ms else ""
+        status_str = f"[{self.status}] " if self.duration_ms else ""
         return (
             f"[{self.trace_id[:8]}] "
             f"{parent_str} "
             f"[{start}] "
             f"{name}"
             f"[{self.func}] "
-            f"[{self.duration_ms}ms] "
-            f"[{self.status}] "
+            f"{duration_str}"
+            f"{status_str}"
             f"{tags_str}"
             f"{error_str}"
         )
@@ -112,7 +114,7 @@ _collector = TraceCollector()
 
 
 # ─── 装饰器 ───────────────────────────────────────────────────
-def trace(_func=None, *, tags: dict = None):
+def trace(_func, tags: dict = None):
     """
     无侵入链路追踪装饰器，支持同步和异步函数。
 
@@ -123,11 +125,7 @@ def trace(_func=None, *, tags: dict = None):
         @trace(name="custom", tags={"service": "order"})
         async def my_async_func(): ...
     """
-
-    if isinstance(_func, str):
-        name = _func
-        _func = None
-
+    name = None
     def decorator(func):
         span_func = f"{func.__qualname__}"
         span_name = name
@@ -144,8 +142,10 @@ def trace(_func=None, *, tags: dict = None):
             return sync_wrapper
 
     # 支持 @trace 和 @trace(...) 两种用法
-    if _func is not None:
+    if not isinstance(_func, str):
         return decorator(_func)
+    else:
+        name = _func
     return decorator
 
 
@@ -192,6 +192,7 @@ def _run_sync(func, span_func, span_name, tags, args, kwargs):
     span, is_root = _make_span(span_func, span_name, tags)
     exc = None
     try:
+        logger.info(span.to_log())
         result = func(*args, **kwargs)
         return result
     except Exception as e:

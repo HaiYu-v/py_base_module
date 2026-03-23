@@ -9,13 +9,13 @@ from tracer import trace, ManualSpan
 # ─── 示例 1: 最简用法，直接加装饰器 ──────────────────────────
 @trace
 def get_user(user_id: int):
-    time.sleep(0.01)
+    time.sleep(5)
     return {"id": user_id, "name": "Alice"}
 
 
 @trace
 def get_orders(user_id: int):
-    time.sleep(0.02)
+    time.sleep(5)
     return [{"order_id": 1001}, {"order_id": 1002}]
 
 
@@ -33,13 +33,13 @@ def handle_request(user_id: int):
 
 
 # ─── 示例 2: 带自定义名称和标签 ───────────────────────────────
-@trace(name="db.query", tags={"db": "postgres", "table": "products"})
+@trace("db.query", tags={"db": "postgres", "table": "products"})
 def fetch_products():
     time.sleep(0.015)
     return ["prod_a", "prod_b"]
 
 
-@trace(name="api.list_products", tags={"service": "catalog"})
+@trace("api.list_products", tags={"service": "catalog"})
 def list_products():
     return fetch_products()
 
@@ -51,7 +51,7 @@ async def fetch_remote(url: str):
     return {"status": 200, "url": url}
 
 
-@trace(name="api.dashboard", tags={"version": "v2"})
+@trace("api.dashboard", tags={"version": "v2"})
 async def get_dashboard():
     results = await asyncio.gather(
         fetch_remote("https://api.example.com/users"),
@@ -99,10 +99,10 @@ if __name__ == "__main__":
     print("=" * 60)
     asyncio.run(get_dashboard())
 
-    print("\n" + "=" * 60)
-    print("示例 4: 手动 Span")
-    print("=" * 60)
-    process_batch([1, 2, 3])
+    # print("\n" + "=" * 60)
+    # print("示例 4: 手动 Span")
+    # print("=" * 60)
+    # process_batch([1, 2, 3])
 
     print("\n" + "=" * 60)
     print("示例 5: 错误追踪")
