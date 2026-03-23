@@ -215,7 +215,7 @@ def _is_async(func) -> bool:
 
 
 # ─── 手动 Span（可选，用于更细粒度控制） ───────────────────────
-class manual_span:
+class ManualSpan:
     """上下文管理器，手动创建 Span"""
     def __init__(self, func:str, name: str, tags: dict = None):
         self.func = func

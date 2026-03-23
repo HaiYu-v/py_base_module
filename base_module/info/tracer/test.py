@@ -3,7 +3,7 @@
 """
 import asyncio
 import time
-from tracer import trace, manual_span
+from tracer import trace, ManualSpan
 
 
 # ─── 示例 1: 最简用法，直接加装饰器 ──────────────────────────
@@ -64,7 +64,7 @@ async def get_dashboard():
 # @trace
 # def process_batch(items: list):
 #     for item in items:
-#         with manual_span("func","process.item", tags={"item_id": item}):
+#         with ManualSpan("func","process.item", tags={"item_id": item}):
 #             time.sleep(0.005)
 
 
