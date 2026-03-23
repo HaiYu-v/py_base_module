@@ -205,6 +205,7 @@ async def _run_async(func, span_func, span_name, tags, args, kwargs):
     span, is_root = _make_span(span_func, span_name, tags)
     exc = None
     try:
+        logger.info(span.to_log())
         result = await func(*args, **kwargs)
         return result
     except Exception as e:
