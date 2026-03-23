@@ -79,19 +79,19 @@ class Span:
             self.error = traceback.format_exc()
 
     def to_log(self) -> str:
-        name = f"[{self.name}] " if self.name else ''
+        name = f"name[{self.name}] " if self.name else ''
         start = datetime.datetime.fromtimestamp(self.start_time).strftime("%Y-%m-%d %H:%M:%S")
-        tags_str = ("[" + ",".join(f"{k}={v}" for k, v in self.tags.items())+"] ") if self.tags else ""
-        parent_str = f"[{self.parent_id[:8]}-{self.span_id[:8]}]" if self.parent_id else f"[        -{self.span_id[:8]}]"
-        error_str = f"[{self.error.splitlines()[-1]}] " if self.error else ""
-        duration_str = f"[{self.duration_ms}ms] " if self.duration_ms else ""
-        status_str = f"[{self.status}] " if self.duration_ms else ""
+        tags_str = ("tags[" + ",".join(f"{k}={v}" for k, v in self.tags.items())+"] ") if self.tags else ""
+        parent_str = f"span[{self.parent_id[:8]}-{self.span_id[:8]}]" if self.parent_id else f"[        -{self.span_id[:8]}]"
+        error_str = f"error[{self.error.splitlines()[-1]}] " if self.error else ""
+        duration_str = f"duration[{self.duration_ms}ms] " if self.duration_ms else ""
+        status_str = f"status[{self.status}] " if self.duration_ms else ""
         return (
-            f"[{self.trace_id[:8]}] "
+            f"trace[{self.trace_id[:8]}] "
             f"{parent_str} "
-            f"[{start}] "
+            f"start[{start}] "
             f"{name}"
-            f"[{self.func}] "
+            f"func[{self.func}] "
             f"{duration_str}"
             f"{status_str}"
             f"{tags_str}"

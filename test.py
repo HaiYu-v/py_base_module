@@ -1,52 +1,112 @@
-from enum import Enum
-from base_hyb import ByteUtil
+"""
+链路追踪使用示例
+"""
+import asyncio
+import time
 
-class ByteEnum(Enum):
-    def __new__(cls, total, bytes):
-        obj = object.__new__(cls)
-        obj._value_ = total
-        obj.total = total
-        obj.bytes = bytes
-        obj.count = total * bytes
-        return obj
+from base_module.info.tracer.tracer import ManualSpan, trace
 
-    # 达人数量,5w个达人
-    kol = (50000, 600)
-    # 视频 每个达人多少视频
-    aweme = (100, 650)
-    # 直播 每个达人多少直播
-    live = (100, 850)
-    # 达人日记录，每月每个达人30个记录
-    kol_daily = (30,25)
-    # 直播日记录，每月每个达人20个直播记录
-    live_daily = (20, 55)
-    # 视频日记录，每月每个达人400个视频记录
-    aweme_daily = (400, 40)
-    # 视频商品，每个视频记录带2个商品
-    item_aweme = (2, 350)
-    # 直播商品，每个直播记录带10个商品
-    item_live = (10, 350)
 
-# 每次抓取10%的达人
-KOL_CARW  = 0.1
-# 12个月
-MONTH = 12
 
-kol_bytes = ByteEnum.kol.count
-aweme_bytes = ByteEnum.kol.total * ByteEnum.aweme.count
-live_bytes = ByteEnum.kol.total * ByteEnum.live.count
-count1:int = kol_bytes + aweme_bytes + live_bytes
-ret1 = ByteUtil.format_bytes(count1)
+# ─── 示例 1: 最简用法，直接加装饰器 ──────────────────────────
+@trace
+def get_user(user_id: int):
+    time.sleep(5)
+    return {"id": user_id, "name": "Alice"}
 
-kol_daily_bytes = ByteEnum.kol.total * KOL_CARW * ByteEnum.kol_daily.count
-live_daily_bytes = ByteEnum.kol.total * KOL_CARW * ByteEnum.live_daily.count
-aweme_daily_bytes = ByteEnum.kol.total * KOL_CARW * ByteEnum.aweme_daily.count
-item_aweme_daily_bytes = ByteEnum.kol.total * KOL_CARW * ByteEnum.item_aweme.total * ByteEnum.item_aweme.count
-item_live_daily_bytes = ByteEnum.kol.total * KOL_CARW * ByteEnum.item_live.total * ByteEnum.item_live.count
 
-count2 = MONTH * (kol_daily_bytes + live_daily_bytes + aweme_daily_bytes + item_aweme_daily_bytes +  item_live_daily_bytes)
-ret2 = ByteUtil.format_bytes(count2)
+@trace
+def get_orders(user_id: int):
+    time.sleep(5)
+    return [{"order_id": 1001}, {"order_id": 1002}]
 
-ret = ByteUtil.format_bytes(count1 + count2)
 
-print(ret)
+@trace
+def build_response(user, orders):
+    return {**user, "orders": orders}
+
+
+@trace
+def handle_request(user_id: int):
+    """根 Span：整个请求链路"""
+    user = get_user(user_id)
+    orders = get_orders(user_id)
+    return build_response(user, orders)
+
+
+# ─── 示例 2: 带自定义名称和标签 ───────────────────────────────
+@trace("db.query", tags={"db": "postgres", "table": "products"})
+def fetch_products():
+    time.sleep(0.015)
+    return ["prod_a", "prod_b"]
+
+
+@trace("api.list_products", tags={"service": "catalog"})
+def list_products():
+    return fetch_products()
+
+
+# ─── 示例 3: 异步函数 ─────────────────────────────────────────
+@trace
+async def fetch_remote(url: str):
+    await asyncio.sleep(0.01)
+    return {"status": 200, "url": url}
+
+
+@trace("api.dashboard", tags={"version": "v2"})
+async def get_dashboard():
+    results = await asyncio.gather(
+        fetch_remote("https://api.example.com/users"),
+        fetch_remote("https://api.example.com/stats"),
+    )
+    return results
+
+
+# ─── 示例 4: 手动 Span（细粒度控制） ──────────────────────────
+@trace
+def process_batch(items: list):
+    for item in items:
+        with ManualSpan("func","process.item", tags={"item_id": item}):
+            time.sleep(0.005)
+
+
+# ─── 示例 5: 异常捕获 ─────────────────────────────────────────
+@trace
+def risky_operation():
+    time.sleep(0.01)
+    raise ValueError("something went wrong")
+
+
+@trace
+def handle_with_error():
+    try:
+        risky_operation()
+    except ValueError:
+        pass  # 异常已被记录在 risky_operation 的 Span 中
+
+
+if __name__ == "__main__":
+    print("=" * 60)
+    print("示例 1: 同步调用链")
+    print("=" * 60)
+    handle_request(42)
+
+    print("\n" + "=" * 60)
+    print("示例 2: 带标签")
+    print("=" * 60)
+    list_products()
+
+    print("\n" + "=" * 60)
+    print("示例 3: 异步")
+    print("=" * 60)
+    asyncio.run(get_dashboard())
+
+    # print("\n" + "=" * 60)
+    # print("示例 4: 手动 Span")
+    # print("=" * 60)
+    # process_batch([1, 2, 3])
+
+    print("\n" + "=" * 60)
+    print("示例 5: 错误追踪")
+    print("=" * 60)
+    handle_with_error()
