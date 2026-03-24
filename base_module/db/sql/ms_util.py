@@ -1,4 +1,5 @@
 from dataclasses import fields
+from operator import is_
 from re import M
 import uuid
 from base_module import BaseMS
@@ -25,7 +26,7 @@ class MsUtil(object):
      * @Prams fields: 列名列表
     """
     @staticmethod
-    def insert_sql(table: str, fields: list[str]) -> str:
+    def insert_sql(table: str, fields: list[str], is_ignore = False) -> str:
         """
         生成 MySQL 插入 SQL
         :param table: 表名
@@ -34,7 +35,7 @@ class MsUtil(object):
         """
         cols = ", ".join(f"`{c}`" for c in fields)
         placeholders = ", ".join(["%s"] * len(fields))
-        sql = f"INSERT INTO {table} ({cols}) VALUES ({placeholders})"
+        sql = f"INSERT {'IGNORE' if is_ignore else ''} INTO {table} ({cols}) VALUES ({placeholders})"
         return sql
 
     @staticmethod
@@ -50,7 +51,7 @@ class MsUtil(object):
         return table
 
     @staticmethod
-    def insert(db:BaseMS, table: str, fields: list[str], data: list[list]):
+    def insert(db:BaseMS, table: str, fields: list[str], data: list[list], is_ignore = False):
         if not fields or len(fields) == 0:
             raise Exception("字段列表不能为空")
 
@@ -62,7 +63,7 @@ class MsUtil(object):
             if len(cur) != col_num:
                 raise ValueError(f"第 {i} 行数据列数 {len(cur)} 与字段数 {col_num} 不一致")
 
-        sql = MsUtil.insert_sql(table, fields)
+        sql = MsUtil.insert_sql(table, fields,is_ignore)
         db.execute(sql, data)
 
     @staticmethod
