@@ -35,10 +35,10 @@ if not logger.handlers:
     file_handler.setFormatter(logging.Formatter("%(message)s"))
     logger.addHandler(file_handler)
 
-    # 控制台 Handler（可选，不需要就删掉）
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(logging.Formatter("%(message)s"))
-    logger.addHandler(console_handler)
+    # # 控制台 Handler（可选，不需要就删掉）
+    # console_handler = logging.StreamHandler()
+    # console_handler.setFormatter(logging.Formatter("%(message)s"))
+    # logger.addHandler(console_handler)
 
     logger.setLevel(logging.INFO)
 
