@@ -136,3 +136,18 @@ class BaseMS():
 
     def escape_string(self, str):
         return self.conn.escape_string(str)
+
+    def get_config(self):
+        return self.config
+    def get_host(self):
+        return self.config['host']
+    def get_port(self):
+        return self.config['port']
+    def get_user(self):
+        return self.config['user']
+    def get_passwd(self):
+        return self.config['passwd']
+    def get_db(self):
+        return self.config['db']
+    def get_charset(self):
+        return self.config['charset']
