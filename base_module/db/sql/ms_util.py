@@ -67,7 +67,7 @@ class MsUtil(object):
         db.execute(sql, data)
 
     @staticmethod
-    def insert_dict(db:BaseMS, table: str,data: list[dict[str, any]]):
+    def insert_dict(db:BaseMS, table: str,data: list[dict[str, any]], is_ignore = False):
         if not data or len(data) == 0 :
             return
 
@@ -80,7 +80,7 @@ class MsUtil(object):
 
         fields = list(data[0].keys())
         insert_data = [[d[f] for f in fields] for d in data]
-        MsUtil.insert(db, table, fields, insert_data)
+        MsUtil.insert(db, table, fields, insert_data,is_ignore)
 
     # 获取建表语句
     @staticmethod
