@@ -100,6 +100,8 @@ class MathUtil:
     """
     @staticmethod
     def balance_to_total(map:dict,total = 10000,last_total = True):
+        if map is None or len(map) == 0:
+            return {}
         k, cur = max(map.items(), key=lambda x: x[1])
         digit = MathUtil.diff_digit(cur,total)
         map = {k: int(v * (10 ** digit)) for k, v in map.items()}
