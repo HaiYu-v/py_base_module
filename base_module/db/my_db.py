@@ -1,5 +1,8 @@
+import inspect
 import pymysql as MySQLdb
 import traceback
+
+from base_module.exception.Business_exception import BusinessException
 '''
 数据库操作的公共函数
 
@@ -56,8 +59,9 @@ class BaseMS():
             if self.in_transaction:
                 self.conn.rollback()
                 self.in_transaction = False
-            traceback.print_exc()
-            raise e
+            trace = inspect.trace()
+            exc = BusinessException(f'执行sql失败,sql:\n{sql}\n', None, e, trace)
+            raise exc 
         finally:
             cursor.close()
 
@@ -74,8 +78,9 @@ class BaseMS():
 
             return result
         except Exception as e:
-            traceback.print_exc()
-            raise e
+            trace = inspect.trace()
+            exc = BusinessException(f'查询所有记录失败,sql:\n{sql}\n', None, e, trace)
+            raise exc 
         finally:
             cursor.close()
 
@@ -87,8 +92,9 @@ class BaseMS():
             result = cursor.fetchall()
             return list(result)  # 返回字典列表
         except Exception as e:
-            traceback.print_exc()
-            raise e
+            trace = inspect.trace()
+            exc = BusinessException(f'查询所有记录(字典)失败,sql:\n{sql}\n', None, e, trace)
+            raise exc 
         finally:
             cursor.close() 
 
@@ -103,8 +109,9 @@ class BaseMS():
                 result_final.append(str(result[i][0]))
             return result_final
         except Exception as e:
-            traceback.print_exc()
-            raise e
+            trace = inspect.trace()
+            exc = BusinessException(f'查询单列失败,sql:\n{sql}\n', None, e, trace)
+            raise exc 
         finally:
             cursor.close()
 
@@ -116,8 +123,9 @@ class BaseMS():
             result = cursor.fetchone()
             return result if(result) else False
         except Exception as e:
-            traceback.print_exc()
-            raise e
+            trace = inspect.trace()
+            exc = BusinessException(f'查询单行失败,sql:\n{sql}\n', None, e, trace)
+            raise exc 
         finally:
             cursor.close()
 
@@ -129,8 +137,9 @@ class BaseMS():
             result = cursor.fetchone()
             return result[0] if(result) else False
         except Exception as e:
-            traceback.print_exc()
-            raise e
+            trace = inspect.trace()
+            exc = BusinessException(f'查询单个值失败,sql:\n{sql}\n', None, e, trace)
+            raise exc 
         finally:
             cursor.close()
 
