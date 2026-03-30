@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import inspect
+from base_module.exception.Business_exception import BusinessException
 from clickhouse_driver import Client
 import traceback
 '''
@@ -29,9 +31,9 @@ class BaseCK():
                 }
             )
         except Exception as e:
-            print(f"连接ClickHouse失败: {e}")
-            traceback.print_exc()
-            raise
+            trace = inspect.trace()
+            exc = BusinessException(f'连接ClickHouse失败', None, e, trace)
+            raise exc 
 
     def reconnect(self):
         """重新连接"""
@@ -39,8 +41,9 @@ class BaseCK():
             self.disconnect()
             self.connect()
         except Exception as e:
-            print(f"重连失败: {e}")
-            traceback.print_exc()
+            trace = inspect.trace()
+            exc = BusinessException(f'重连失败', None, e, trace)
+            raise exc 
 
     def execute(self, sql, data=[], *, bind_data=[]):
         """执行SQL语句（INSERT, UPDATE, DELETE等）"""
@@ -54,10 +57,9 @@ class BaseCK():
                 result = self.client.execute(sql)
             return result
         except Exception as e:
-            print(f"执行SQL失败: {e}")
-            print(f"SQL: {sql}")
-            traceback.print_exc()
-            raise
+            trace = inspect.trace()
+            exc = BusinessException(f'执行sql失败,sql:\n{sql}\n', None, e, trace)
+            raise exc 
 
     def queryAll(self, sql, *, bind_data=[]):
         """查询所有记录"""
@@ -74,10 +76,9 @@ class BaseCK():
             
             return result
         except Exception as e:
-            print(f"查询所有记录失败: {e}")
-            print(f"SQL: {sql}")
-            traceback.print_exc()
-            raise
+            trace = inspect.trace()
+            exc = BusinessException(f'查询所有记录失败,sql:\n{sql}\n', None, e, trace)
+            raise exc 
 
     def queryAll_dict(self, sql, *, bind_data=[]):
         """查询所有记录，返回字典列表"""
@@ -97,10 +98,9 @@ class BaseCK():
             
             return dict_result
         except Exception as e:
-            print(f"查询所有记录(字典)失败: {e}")
-            print(f"SQL: {sql}")
-            traceback.print_exc()
-            raise
+            trace = inspect.trace()
+            exc = BusinessException(f'查询所有记录(字典)失败,sql:\n{sql}\n', None, e, trace)
+            raise exc 
 
     def queryColumn(self, sql, *, bind_data=[]):
         """查询单列数据"""
@@ -115,10 +115,9 @@ class BaseCK():
                 result_final.append(str(row[0]))
             return result_final
         except Exception as e:
-            print(f"查询单列失败: {e}")
-            print(f"SQL: {sql}")
-            traceback.print_exc()
-            raise
+            trace = inspect.trace()
+            exc = BusinessException(f'查询单列失败,sql:\n{sql}\n', None, e, trace)
+            raise exc 
 
     def queryRow(self, sql, *, bind_data=[]):
         """查询单行数据"""
@@ -130,10 +129,9 @@ class BaseCK():
             
             return result[0] if result else False
         except Exception as e:
-            print(f"查询单行失败: {e}")
-            print(f"SQL: {sql}")
-            traceback.print_exc()
-            raise
+            trace = inspect.trace()
+            exc = BusinessException(f'查询单行失败,sql:\n{sql}\n', None, e, trace)
+            raise exc 
 
     def queryScalar(self, sql, *, bind_data=[]):
         """查询单个值"""
@@ -145,10 +143,9 @@ class BaseCK():
             
             return result[0][0] if result else False
         except Exception as e:
-            print(f"查询单个值失败: {e}")
-            print(f"SQL: {sql}")
-            traceback.print_exc()
-            raise
+            trace = inspect.trace()
+            exc = BusinessException(f'查询单个值失败,sql:\n{sql}\n', None, e, trace)
+            raise exc 
 
     def insert_dataframe(self, table_name, df):
         """
@@ -162,9 +159,9 @@ class BaseCK():
             self.client.insert_dataframe(f'INSERT INTO {table_name} VALUES', df)
             return True
         except Exception as e:
-            print(f"插入DataFrame失败: {e}")
-            traceback.print_exc()
-            raise e
+            trace = inspect.trace()
+            exc = BusinessException('插入DataFrame失败', None, e, trace)
+            raise exc 
 
     def execute_with_progress(self, sql, bind_data=[], progress_callback=None):
         """
@@ -188,9 +185,9 @@ class BaseCK():
             )
             return result
         except Exception as e:
-            print(f"执行SQL失败: {e}")
-            traceback.print_exc()
-            raise e
+            trace = inspect.trace()
+            exc = BusinessException('执行SQL并提供进度回调失败', None, e, trace)
+            raise exc 
 
     def get_table_info(self, table_name):
         """获取表结构信息"""
@@ -199,9 +196,9 @@ class BaseCK():
             result = self.client.execute(sql)
             return list(result)
         except Exception as e:
-            print(f"获取表信息失败: {e}")
-            traceback.print_exc()
-            raise e
+            trace = inspect.trace()
+            exc = BusinessException('获取表结构信息失败', None, e, trace)
+            raise exc 
 
     def get_database_tables(self):
         """获取当前数据库的所有表名"""
@@ -210,9 +207,9 @@ class BaseCK():
             result = self.client.execute(sql)
             return [row[0] for row in result]
         except Exception as e:
-            print(f"获取表列表失败: {e}")
-            traceback.print_exc()
-            raise e
+            trace = inspect.trace()
+            exc = BusinessException('获取当前数据库的所有表名失败', None, e, trace)
+            raise exc 
 
     def disconnect(self):
         """断开连接"""
@@ -220,9 +217,9 @@ class BaseCK():
             if hasattr(self, 'client') and self.client:
                 self.client.disconnect()
         except Exception as e:
-            print(f"断开连接失败: {e}")
-            traceback.print_exc()
-            raise e
+            trace = inspect.trace()
+            exc = BusinessException('断开连接失败', None, e, trace)
+            raise exc 
 
     def __del__(self):
         """析构函数，确保连接被正确关闭"""

@@ -217,11 +217,9 @@ def _run_sync(func, span_func, span_name, tags, args, kwargs):
         result = func(*args, **kwargs)
         return result
     except Exception as e:
-        # 获取被装饰函数调用堆栈，跳过 wrapper 自身
         trace = inspect.trace()
-        # 构建异常
-        exc = BusinessException(span_name,None, e, trace)
-        raise exc from e
+        exc = BusinessException(span_name, None, e, trace)
+        raise exc from None 
     finally:
         _finish_span(span, is_root, exc)
         Log.log(f"****** [{span.name}] [{func.__name__}] [{span.duration_ms}ms]")
@@ -235,11 +233,9 @@ async def _run_async(func, span_func, span_name, tags, args, kwargs):
         result = await func(*args, **kwargs)
         return result
     except Exception as e:
-        # 获取被装饰函数调用堆栈，跳过 wrapper 自身
         trace = inspect.trace()
-        # 构建异常
-        exc = BusinessException(span_name,None, e, trace)
-        raise exc from e
+        exc = BusinessException(span_name, None, e, trace)
+        raise exc from None 
     finally:
         _finish_span(span, is_root, exc)
         Log.log(f"****** [{span.name}] [{func.__name__}] [{span.duration_ms}ms]")
