@@ -1,4 +1,5 @@
 import inspect
+import re
 import pymysql as MySQLdb
 import traceback
 
@@ -60,7 +61,7 @@ class BaseMS():
                 self.conn.rollback()
                 self.in_transaction = False
             trace = inspect.trace()
-            exc = BusinessException(f'执行sql失败,sql:\n{sql[:200]}\n', None, e, trace)
+            exc = BusinessException(f'执行sql失败,sql:\n{re.sub(r'\s+', ' ', sql).strip()[:200]}\n', None, e, trace)
             raise exc 
         finally:
             cursor.close()
@@ -79,7 +80,7 @@ class BaseMS():
             return result
         except Exception as e:
             trace = inspect.trace()
-            exc = BusinessException(f'查询所有记录失败,sql:\n{sql[:200]}\n', None, e, trace)
+            exc = BusinessException(f'查询所有记录失败,sql:\n{re.sub(r'\s+', ' ', sql).strip()[:200]}\n', None, e, trace)
             raise exc 
         finally:
             cursor.close()
@@ -93,7 +94,7 @@ class BaseMS():
             return list(result)  # 返回字典列表
         except Exception as e:
             trace = inspect.trace()
-            exc = BusinessException(f'查询所有记录(字典)失败,sql:\n{sql[:200]}\n', None, e, trace)
+            exc = BusinessException(f'查询所有记录(字典)失败,sql:\n{re.sub(r'\s+', ' ', sql).strip()[:200]}\n', None, e, trace)
             raise exc 
         finally:
             cursor.close() 
@@ -110,7 +111,7 @@ class BaseMS():
             return result_final
         except Exception as e:
             trace = inspect.trace()
-            exc = BusinessException(f'查询单列失败,sql:\n{sql[:200]}\n', None, e, trace)
+            exc = BusinessException(f'查询单列失败,sql:\n{re.sub(r'\s+', ' ', sql).strip()[:200]}\n', None, e, trace)
             raise exc 
         finally:
             cursor.close()
@@ -124,7 +125,7 @@ class BaseMS():
             return result if(result) else False
         except Exception as e:
             trace = inspect.trace()
-            exc = BusinessException(f'查询单行失败,sql:\n{sql[:200]}\n', None, e, trace)
+            exc = BusinessException(f'查询单行失败,sql:\n{re.sub(r'\s+', ' ', sql).strip()[:200]}\n', None, e, trace)
             raise exc 
         finally:
             cursor.close()
@@ -138,7 +139,7 @@ class BaseMS():
             return result[0] if(result) else False
         except Exception as e:
             trace = inspect.trace()
-            exc = BusinessException(f'查询单个值失败,sql:\n{sql[:200]}\n', None, e, trace)
+            exc = BusinessException(f'查询单个值失败,sql:\n{re.sub(r'\s+', ' ', sql).strip()[:200]}\n', None, e, trace)
             raise exc 
         finally:
             cursor.close()

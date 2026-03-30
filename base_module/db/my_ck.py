@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import inspect
+import re
 from base_module.exception.Business_exception import BusinessException
 from clickhouse_driver import Client
 import traceback
@@ -58,7 +59,7 @@ class BaseCK():
             return result
         except Exception as e:
             trace = inspect.trace()
-            exc = BusinessException(f'执行sql失败,sql:\n{sql[:200]}\n', None, e, trace)
+            exc = BusinessException(f'执行sql失败,sql:\n{re.sub(r'\s+', ' ', sql).strip()[:200]}\n', None, e, trace)
             raise exc 
 
     def queryAll(self, sql, *, bind_data=[]):
@@ -77,7 +78,7 @@ class BaseCK():
             return result
         except Exception as e:
             trace = inspect.trace()
-            exc = BusinessException(f'查询所有记录失败,sql:\n{sql[:200]}\n', None, e, trace)
+            exc = BusinessException(f'查询所有记录失败,sql:\n{re.sub(r'\s+', ' ', sql).strip()[:200]}\n', None, e, trace)
             raise exc 
 
     def queryAll_dict(self, sql, *, bind_data=[]):
@@ -99,7 +100,7 @@ class BaseCK():
             return dict_result
         except Exception as e:
             trace = inspect.trace()
-            exc = BusinessException(f'查询所有记录(字典)失败,sql:\n{sql[:200]}\n', None, e, trace)
+            exc = BusinessException(f'查询所有记录(字典)失败,sql:\n{re.sub(r'\s+', ' ', sql).strip()[:200]}\n', None, e, trace)
             raise exc 
 
     def queryColumn(self, sql, *, bind_data=[]):
@@ -116,7 +117,7 @@ class BaseCK():
             return result_final
         except Exception as e:
             trace = inspect.trace()
-            exc = BusinessException(f'查询单列失败,sql:\n{sql[:200]}\n', None, e, trace)
+            exc = BusinessException(f'查询单列失败,sql:\n{re.sub(r'\s+', ' ', sql).strip()[:200]}\n', None, e, trace)
             raise exc 
 
     def queryRow(self, sql, *, bind_data=[]):
@@ -130,7 +131,7 @@ class BaseCK():
             return result[0] if result else False
         except Exception as e:
             trace = inspect.trace()
-            exc = BusinessException(f'查询单行失败,sql:\n{sql[:200]}\n', None, e, trace)
+            exc = BusinessException(f'查询单行失败,sql:\n{re.sub(r'\s+', ' ', sql).strip()[:200]}\n', None, e, trace)
             raise exc 
 
     def queryScalar(self, sql, *, bind_data=[]):
@@ -144,7 +145,7 @@ class BaseCK():
             return result[0][0] if result else False
         except Exception as e:
             trace = inspect.trace()
-            exc = BusinessException(f'查询单个值失败,sql:\n{sql[:200]}\n', None, e, trace)
+            exc = BusinessException(f'查询单个值失败,sql:\n{re.sub(r'\s+', ' ', sql).strip()[:200]}\n', None, e, trace)
             raise exc 
 
     def insert_dataframe(self, table_name, df):
