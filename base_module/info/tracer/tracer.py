@@ -215,6 +215,7 @@ def _run_sync(func, span_func, span_name, tags, args, kwargs):
     try:
         Log.log(f"====== [{span.name}] [{func.__name__}]")
         result = func(*args, **kwargs)
+        Log.log(f"****** [{span.name}] [{func.__name__}] [{span.duration_ms}ms]")
         return result
     except Exception as e:
         trace = inspect.trace()
@@ -222,7 +223,6 @@ def _run_sync(func, span_func, span_name, tags, args, kwargs):
         raise exc from None 
     finally:
         _finish_span(span, is_root, exc)
-        Log.log(f"****** [{span.name}] [{func.__name__}] [{span.duration_ms}ms]")
 
 
 async def _run_async(func, span_func, span_name, tags, args, kwargs):
@@ -231,6 +231,7 @@ async def _run_async(func, span_func, span_name, tags, args, kwargs):
     try:
         Log.log(f"====== [{span.name}] [{func.__name__}]")
         result = await func(*args, **kwargs)
+        Log.log(f"****** [{span.name}] [{func.__name__}] [{span.duration_ms}ms]")
         return result
     except Exception as e:
         trace = inspect.trace()
@@ -238,7 +239,6 @@ async def _run_async(func, span_func, span_name, tags, args, kwargs):
         raise exc from None 
     finally:
         _finish_span(span, is_root, exc)
-        Log.log(f"****** [{span.name}] [{func.__name__}] [{span.duration_ms}ms]")
 
 
 def _is_async(func) -> bool:
