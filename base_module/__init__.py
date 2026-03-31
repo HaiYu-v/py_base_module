@@ -26,6 +26,7 @@ from .utils.Country_util import CountryUtil
 from .utils.json_util import JsonUtil
 from .info.tracer.tracer import trace
 from .info.tracer.tracer import ManualSpan
+from .info.tracer.tracer import get_span
 
 __all__ = [ 
     "BusinessException",
@@ -55,5 +56,6 @@ __all__ = [
     "CountryUtil",
     "JsonUtil",
     "trace",
-    "ManualSpan"
+    "ManualSpan",
+    "get_span"
 ]

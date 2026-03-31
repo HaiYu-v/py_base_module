@@ -93,7 +93,7 @@ def _get_stack() -> list:
         _span_stack.set(stack)
     return stack
 
-def get_current_span() -> Optional[Span]:
+def get_span() -> Optional[Span]:
     stack = _get_stack()
     return stack[-1] if stack else None
 
