@@ -19,42 +19,6 @@ from logging.handlers import TimedRotatingFileHandler
 from base_module.exception.Business_exception import BusinessException
 from base_module.info.log import Log
 
-# ─── 日志配置 ────────────────────────────────────────────────
-LOG_FILE = r"log/trace.log"  # 指定日志文件路径
-os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
-logger = logging.getLogger("tracer")
-if not logger.handlers:
-    # 文件 Handler
-    file_handler = TimedRotatingFileHandler(
-        filename=LOG_FILE,
-        when="midnight",    # 每天滚动：midnight / H（每小时）/ D（每天）
-        interval=1,
-        backupCount=30,      # 保留最近 30 天
-        encoding="utf-8",
-    )
-    file_handler.setFormatter(logging.Formatter("%(message)s"))
-    logger.addHandler(file_handler)
-
-    # # 控制台 Handler（可选，不需要就删掉）
-    # console_handler = logging.StreamHandler()
-    # console_handler.setFormatter(logging.Formatter("%(message)s"))
-    # logger.addHandler(console_handler)
-
-    logger.setLevel(logging.INFO)
-
-# ─── Context（跨异步/线程安全） ────────────────────────────────
-_trace_id: ContextVar[Optional[str]] = ContextVar("trace_id", default=None)
-_span_stack: ContextVar[list] = ContextVar("span_stack", default=None)
-
-
-def _get_stack() -> list:
-    stack = _span_stack.get()
-    if stack is None:
-        stack = []
-        _span_stack.set(stack)
-    return stack
-
-
 # ─── 数据结构 ─────────────────────────────────────────────────
 @dataclass
 class Span:
@@ -97,6 +61,42 @@ class Span:
             f"{tags_str}"
             f"{error_str}"
         )
+
+
+
+# ─── 日志配置 ────────────────────────────────────────────────
+LOG_FILE = r"log/trace.log"  # 指定日志文件路径
+os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
+logger = logging.getLogger("tracer")
+if not logger.handlers:
+    # 文件 Handler
+    file_handler = TimedRotatingFileHandler(
+        filename=LOG_FILE,
+        when="midnight",    # 每天滚动：midnight / H（每小时）/ D（每天）
+        interval=1,
+        backupCount=7,      # 保留最近 30 天
+        encoding="utf-8",
+    )
+    file_handler.setFormatter(logging.Formatter("%(message)s"))
+    logger.addHandler(file_handler)
+    logger.setLevel(logging.INFO)
+
+# ─── Context（跨异步/线程安全） ────────────────────────────────
+_trace_id: ContextVar[Optional[str]] = ContextVar("trace_id", default=None)
+_span_stack: ContextVar[list] = ContextVar("span_stack", default=None)
+
+
+def _get_stack() -> list:
+    stack = _span_stack.get()
+    if stack is None:
+        stack = []
+        _span_stack.set(stack)
+    return stack
+
+def get_current_span() -> Optional[Span]:
+    stack = _get_stack()
+    return stack[-1] if stack else None
+
 
 
 # ─── 采集器 ───────────────────────────────────────────────────
