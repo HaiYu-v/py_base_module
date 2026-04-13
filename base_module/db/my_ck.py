@@ -98,7 +98,6 @@ class BaseCK():
             dict_result = []
             for row in result:
                 dict_result.append(dict(zip(column_names, row)))
-            
             return dict_result
         except Exception as e:
             trace = inspect.trace()

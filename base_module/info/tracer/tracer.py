@@ -74,7 +74,7 @@ if not logger.handlers:
         filename=LOG_FILE,
         when="midnight",    # 每天滚动：midnight / H（每小时）/ D（每天）
         interval=1,
-        backupCount=7,      # 保留最近 30 天
+        backupCount=7,      # 保留最近 7 天
         encoding="utf-8",
     )
     file_handler.setFormatter(logging.Formatter("%(message)s"))
