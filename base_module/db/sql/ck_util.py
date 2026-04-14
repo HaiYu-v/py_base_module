@@ -134,7 +134,7 @@ class CkUtil:
     @staticmethod
     def create_replace_table(db: BaseCK, table_name: str, replace_name: str = '') -> ReplaceConst:
         if replace_name == '':
-            replace_name = f"{table_name}_replace"
+            replace_name = f"{table_name}_{uuid.uuid4().hex}"
 
         db.execute(f"DROP TABLE IF EXISTS {replace_name} SYNC")
         db.execute(f"CREATE TABLE {replace_name} AS {table_name}")
