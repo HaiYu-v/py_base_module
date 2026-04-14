@@ -7,6 +7,8 @@ from base_module import SqlUtil
 @dataclass(frozen=True)
 class ReplaceConst:
     REPLACE_TABLE: str
+    def __str__(self):
+        return self.REPLACE_TABLE
 
 class CkUtil:
     @staticmethod
