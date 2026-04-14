@@ -11,6 +11,7 @@ from .db.my_ck_pool import BaseCkPool
 from .utils.time_util import TimeUtil
 from .db.sql.sql_util import SqlUtil
 from .db.sql.ck_util import CkUtil
+from .db.sql.ck_util import ReplaceConst
 from .db.sql.ms_util import MsUtil
 from .db.sql.sl_util import SlUtil
 from .send.qi_wei_send import QiWeiSend
@@ -43,6 +44,7 @@ __all__ = [
     "SqlUtil",
     "MsUtil",
     "CkUtil",
+    "ReplaceConst"
     "SlUtil",
     "QiWeiSend",
     "FileEnum",

@@ -1,8 +1,12 @@
 
-from dataclasses import fields
+from dataclasses import dataclass, fields
 import uuid
 from base_module import BaseCK
 from base_module import SqlUtil
+
+@dataclass(frozen=True)
+class ReplaceConst:
+    REPLACE_TABLE: str
 
 class CkUtil:
     @staticmethod
@@ -125,4 +129,18 @@ class CkUtil:
         sql = f"EXISTS {db_name}.{table}"
         return db.queryScalar(sql)
         
-        
+
+
+    @staticmethod
+    def create_replace_table(db: BaseCK, table_name: str, replace_name: str = '') -> ReplaceConst:
+        if replace_name == '':
+            replace_name = f"{table_name}_replace"
+
+        db.execute(f"DROP TABLE IF EXISTS {replace_name} SYNC")
+        db.execute(f"CREATE TABLE {replace_name} AS {table_name}")
+
+        return ReplaceConst(REPLACE_TABLE=replace_name)
+
+    @staticmethod
+    def delete_replace_table(db: BaseCK, replace_const: ReplaceConst) -> None:
+        return db.execute(f"DROP TABLE IF EXISTS {replace_const.REPLACE_TABLE} SYNC")
