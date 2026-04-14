@@ -10,6 +10,23 @@ class ReplaceConst:
     def __str__(self):
         return self.REPLACE_TABLE
 
+
+class ReplaceTableContext:
+    def __init__(self, db:BaseCK, table:str, replace_name:str):
+        self.db: BaseCK = db
+        self.table: str = table
+        self.replace_name: str = replace_name
+        self.replace_table: ReplaceConst = None
+
+    def __enter__(self) -> ReplaceConst:
+        self.replace_table = CkUtil.create_replace_table(self.db, self.table, self.replace_name)
+        return self.replace_table  # as 后面的变量
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        CkUtil.delete_replace_table(self.db, self.replace_table)
+        return False  # False = 不吞异常，异常继续向上抛     
+
+
 class CkUtil:
     @staticmethod
     def insert_temporary_table(ck_db:BaseCK, data:list[list], fields:list[tuple[str, str]]) -> str:
@@ -142,6 +159,10 @@ class CkUtil:
         db.execute(f"CREATE TABLE {replace_name} AS {table_name}")
 
         return ReplaceConst(REPLACE_TABLE=replace_name)
+
+    @staticmethod
+    def with_replace(db: BaseCK, table_name: str, replace_name: str = '') -> ReplaceConst:
+        return ReplaceTableContext(db, table_name,replace_name)
 
     @staticmethod
     def delete_replace_table(db: BaseCK, replace_const: ReplaceConst) -> None:

@@ -12,6 +12,7 @@ from .utils.time_util import TimeUtil
 from .db.sql.sql_util import SqlUtil
 from .db.sql.ck_util import CkUtil
 from .db.sql.ck_util import ReplaceConst
+from .db.sql.ck_util import ReplaceTableContext
 from .db.sql.ms_util import MsUtil
 from .db.sql.sl_util import SlUtil
 from .send.qi_wei_send import QiWeiSend
@@ -45,6 +46,7 @@ __all__ = [
     "MsUtil",
     "CkUtil",
     "ReplaceConst"
+    "ReplaceTableContext",
     "SlUtil",
     "QiWeiSend",
     "FileEnum",
