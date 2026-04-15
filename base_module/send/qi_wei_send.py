@@ -51,13 +51,13 @@ class QiWeiSend(ISend):
             post(part)
 
     def send_success_md(self, message:str,title:str="执行成功"):
-        return self.send_md(f"### ✅ {title}\n{message}")
+        return self.send_md(f"# ✅ {title}\n{message}")
 
     def send_error_md(self, message:str,title:str="执行失败"):
-        return self.send_md(f"### ❌ {title}\n{message}")
+        return self.send_md(f"# ❌ {title}\n{message}")
 
     def send_warning_md(self, message:str,title:str="执行异常"):
-        return self.send_md(f"### ⚠️ {title}\n{message}")
+        return self.send_md(f"# ⚠️ {title}\n{message}")
     # @别人
     def send_principal(self, principals:list[str]):
         """保存数据的方法，子类必须实现"""
