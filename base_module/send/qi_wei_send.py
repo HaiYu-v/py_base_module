@@ -38,8 +38,8 @@ class QiWeiSend(ISend):
 
         def post(content):
             data = {
-                "msgtype": "markdown",
-                "markdown": {
+                "msgtype": "markdown_v2",
+                "markdown_v2": {
                     "content": content
                 }
             }
