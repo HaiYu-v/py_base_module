@@ -60,6 +60,10 @@ class BaseCK():
         except Exception as e:
             trace = inspect.trace()
             cleaned_sql = re.sub(r'\s+', ' ', sql).strip()[:2000]
+            if data:
+                cleaned_sql += f"\n数据:\n {data}"
+            if bind_data:
+                cleaned_sql += f"\n绑定数据:\n {bind_data}"
             exc = BusinessException(f"执行sql失败,sql:\n{cleaned_sql}\n", None, e, trace)
             raise exc 
 
