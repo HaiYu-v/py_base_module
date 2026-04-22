@@ -167,3 +167,9 @@ class CkUtil:
     @staticmethod
     def delete_replace_table(db: BaseCK, replace_const: ReplaceConst) -> None:
         return db.execute(f"DROP TABLE IF EXISTS {replace_const.REPLACE_TABLE} SYNC")
+    
+    @staticmethod
+    def create_tomporary_table(db: BaseCK, table_name: str) -> str:
+        temp_table_name = f"temp_{uuid.uuid4().hex}"
+        db.execute(f"CREATE TEMPORARY TABLE {temp_table_name} AS SELECT * FROM {table_name} WHERE 1=0")
+        return temp_table_name
