@@ -6,6 +6,8 @@ from base_module import BaseMS
 from base_module import SqlUtil
 
 class MsUtil(object):
+    # 禁止插入
+    FORBID_INSERT = False
     """ -------------------------------------------------------------------
      * 生成 ON DUPLICATE KEY UPDATE 语句
      * 只在字段值不同的时候才更新
@@ -47,11 +49,13 @@ class MsUtil(object):
         db.execute(sql)
 
         fields = [field[0] for field in fields]
-        MsUtil.insert_table(db,table,fields,data)
+        MsUtil.check(fields,data)
+        sql = MsUtil.insert_sql(table, fields)
+        db.execute(sql, data)
         return table
 
     @staticmethod
-    def insert(db:BaseMS, table: str, fields: list[str], data: list[list], is_ignore = False):
+    def check(fields: list[str], data: list[list]):
         if not fields or len(fields) == 0:
             raise Exception("字段列表不能为空")
 
@@ -63,8 +67,14 @@ class MsUtil(object):
             if len(cur) != col_num:
                 raise ValueError(f"第 {i} 行数据列数 {len(cur)} 与字段数 {col_num} 不一致")
 
+    @staticmethod
+    def insert(db:BaseMS, table: str, fields: list[str], data: list[list], is_ignore = False):
+        MsUtil.check(fields,data)
         sql = MsUtil.insert_sql(table, fields,is_ignore)
-        db.execute(sql, data)
+        if not MsUtil.FORBID_INSERT:
+            db.execute(sql, data)
+
+    
 
     @staticmethod
     def insert_dict(db:BaseMS, table: str,data: list[dict[str, any]], is_ignore = False):

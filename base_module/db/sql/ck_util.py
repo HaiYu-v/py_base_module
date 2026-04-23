@@ -3,6 +3,7 @@ from dataclasses import dataclass, fields
 import uuid
 from base_module import BaseCK
 from base_module import SqlUtil
+from base_module.info.log import Log
 
 @dataclass(frozen=True)
 class ReplaceConst:
@@ -23,22 +24,14 @@ class ReplaceTableContext:
         return self.replace_table  # as 后面的变量
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        CkUtil.delete_replace_table(self.db, self.replace_table)
+        CkUtil.delete_table(self.db, self.replace_table)
         return False  # False = 不吞异常，异常继续向上抛     
 
 
 class CkUtil:
-    @staticmethod
-    def insert_temporary_table(ck_db:BaseCK, data:list[list], fields:list[tuple[str, str]]) -> str:
-        table = f"temporary_{uuid.uuid4().hex}"
-        fields_sql = SqlUtil.create_fields(fields)
-
-        sql = f"CREATE TEMPORARY TABLE {table} {fields_sql} ENGINE = TinyLog"
-        ck_db.execute(sql)
-
-        fields = [field[0] for field in fields]
-        CkUtil.insert(ck_db,table,fields,data)
-        return table
+    # 禁止插入
+    FORBID_INSERT = False
+    
     @staticmethod
     def insert_sql(table: str, fields: list[str]) -> str:
         """
@@ -53,7 +46,7 @@ class CkUtil:
         return sql
 
     @staticmethod
-    def insert(db:BaseCK, table: str, fields: list[str], data: list[list]):
+    def check(fields: list[str], data: list[list]):
         if not fields or len(fields) == 0:
             raise Exception("字段列表不能为空")
 
@@ -64,9 +57,13 @@ class CkUtil:
         for i, cur in enumerate(data):
             if len(cur) != col_num:
                 raise ValueError(f"第 {i} 行数据列数 {len(cur)} 与字段数 {col_num} 不一致")
-
+        
+    @staticmethod
+    def insert(db:BaseCK, table: str, fields: list[str], data: list[list]):
+        CkUtil.check(fields,data)
         sql = CkUtil.insert_sql(table, fields)
-        db.execute(sql, data)
+        if not CkUtil.FORBID_INSERT:
+            db.execute(sql, data)
 
     @staticmethod
     def insert_dict(db:BaseCK, table: str,data: list[dict[str, any]]):
@@ -84,12 +81,18 @@ class CkUtil:
         insert_data = [[d[f] for f in fields] for d in data]
         CkUtil.insert(db, table, fields, insert_data)
     
+    # 删除表
+    @staticmethod
+    def delete_table(db: BaseCK, replace_const: ReplaceConst) -> None:
+        return db.execute(f"DROP TABLE IF EXISTS {replace_const.REPLACE_TABLE} SYNC")
+
     # 获取建表语句
     @staticmethod
     def get_create_table_sql(db:BaseCK, table: str) -> str:
         sql = f"SHOW CREATE TABLE {table}"
         return db.queryScalar(sql)
 
+    # 获取主键字段
     @staticmethod
     def get_primary_key_fields(db:BaseCK, db_name:str, table: str) -> str:
         sql = f"""
@@ -100,7 +103,6 @@ class CkUtil:
             AND name = '{table}';
         """
         return db.queryScalar(sql)
-
 
     # 获取两个表的交集字段
     @staticmethod
@@ -148,8 +150,6 @@ class CkUtil:
         sql = f"EXISTS {db_name}.{table}"
         return db.queryScalar(sql)
         
-
-
     @staticmethod
     def create_replace_table(db: BaseCK, table_name: str, replace_name: str = '') -> ReplaceConst:
         if replace_name == '':
@@ -160,16 +160,43 @@ class CkUtil:
 
         return ReplaceConst(REPLACE_TABLE=replace_name)
 
+    # 使用with来维护临时表的创建和销毁
     @staticmethod
     def with_replace(db: BaseCK, table_name: str, replace_name: str = '') -> ReplaceConst:
         return ReplaceTableContext(db, table_name,replace_name)
 
-    @staticmethod
-    def delete_replace_table(db: BaseCK, replace_const: ReplaceConst) -> None:
-        return db.execute(f"DROP TABLE IF EXISTS {replace_const.REPLACE_TABLE} SYNC")
-    
+    # 创建某张表的内存临时表
     @staticmethod
     def create_tomporary_table(db: BaseCK, table_name: str) -> str:
         temp_table_name = f"temp_{uuid.uuid4().hex}"
         db.execute(f"CREATE TEMPORARY TABLE {temp_table_name} AS SELECT * FROM {table_name} WHERE 1=0")
         return temp_table_name
+    
+    # 创建并写入内存临时表(指定fields)
+    @staticmethod
+    def insert_temporary_table(ck_db:BaseCK, data:list[list], fields:list[tuple[str, str]]) -> str:
+        table = f"temporary_{uuid.uuid4().hex}"
+        fields_sql = SqlUtil.create_fields(fields)
+
+        sql = f"CREATE TEMPORARY TABLE {table} {fields_sql} ENGINE = TinyLog"
+        ck_db.execute(sql)
+
+        fields = [field[0] for field in fields]
+        CkUtil.check(fields,data)
+        sql = CkUtil.insert_sql(table, fields)
+        ck_db.execute(sql, data)
+        return table
+    
+    # 批量进行分区替换
+    @staticmethod
+    def replace_partitions(ck_db:BaseCK,target_table:str,replace_table:str,partitions:list[list[str]]):
+        for partition in partitions:
+            sql = f"""
+                ALTER TABLE {target_table}
+                REPLACE PARTITION ({",".join(partition)})
+                FROM {replace_table};    
+            """
+            if not CkUtil.FORBID_INSERT:
+                ck_db.execute(sql)
+                Log.log(f">>>>>> [target_table] 分区替换[{",".join(partition)}]")
+    
