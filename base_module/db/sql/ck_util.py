@@ -193,10 +193,10 @@ class CkUtil:
         for partition in partitions:
             sql = f"""
                 ALTER TABLE {target_table}
-                REPLACE PARTITION ({",".join(partition)})
+                REPLACE PARTITION ({','.join(partition)})
                 FROM {replace_table};    
             """
             if not CkUtil.FORBID_INSERT:
                 ck_db.execute(sql)
-                Log.log(f">>>>>> [target_table] 分区替换[{",".join(partition)}]")
+                Log.log(f">>>>>> [target_table] 分区替换[{','.join(partition)}]")
     
