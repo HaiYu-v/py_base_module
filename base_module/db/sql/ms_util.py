@@ -14,7 +14,7 @@ class MsUtil(object):
      * @Prams fields: 要更新的字段名列表
     """
     @staticmethod
-    def ignore(*fields: str) -> str:
+    def duplicate(fields: list[str]) -> str:
         updates = ",\n".join(
             f"{field} = IF({field} <> VALUES({field}), VALUES({field}), {field})"
             for field in fields
@@ -28,7 +28,7 @@ class MsUtil(object):
      * @Prams fields: 列名列表
     """
     @staticmethod
-    def insert_sql(table: str, fields: list[str], is_ignore = False) -> str:
+    def insert_sql(table: str, fields: list[str], is_ignore = False, duplicate:list[str]=[]) -> str:
         """
         生成 MySQL 插入 SQL
         :param table: 表名
@@ -37,7 +37,12 @@ class MsUtil(object):
         """
         cols = ", ".join(f"`{c}`" for c in fields)
         placeholders = ", ".join(["%s"] * len(fields))
-        sql = f"INSERT {'IGNORE' if is_ignore else ''} INTO {table} ({cols}) VALUES ({placeholders})"
+
+        duplicate_sql = ''
+        if len(duplicate) > 0:
+            is_ignore = True
+            duplicate_sql = MsUtil.duplicate(duplicate)
+        sql = f"INSERT {'IGNORE' if is_ignore else ''} INTO {table} ({cols}) VALUES ({placeholders}) {duplicate_sql}"
         return sql
 
     @staticmethod
@@ -68,16 +73,16 @@ class MsUtil(object):
                 raise ValueError(f"第 {i} 行数据列数 {len(cur)} 与字段数 {col_num} 不一致")
 
     @staticmethod
-    def insert(db:BaseMS, table: str, fields: list[str], data: list[list], is_ignore = False):
+    def insert(db:BaseMS, table: str, fields: list[str], data: list[list], is_ignore = False, duplicate:list[str]=[]):
         MsUtil.check(fields,data)
-        sql = MsUtil.insert_sql(table, fields,is_ignore)
+        sql = MsUtil.insert_sql(table, fields,is_ignore,duplicate)
         if not MsUtil.FORBID_INSERT:
             db.execute(sql, data)
 
     
 
     @staticmethod
-    def insert_dict(db:BaseMS, table: str,data: list[dict[str, any]], is_ignore = False):
+    def insert_dict(db:BaseMS, table: str,data: list[dict[str, any]], is_ignore = False, duplicate:list[str]=[]):
         if not data or len(data) == 0 :
             return
 
@@ -90,7 +95,7 @@ class MsUtil(object):
 
         fields = list(data[0].keys())
         insert_data = [[d[f] for f in fields] for d in data]
-        MsUtil.insert(db, table, fields, insert_data,is_ignore)
+        MsUtil.insert(db, table, fields, insert_data,is_ignore,duplicate)
 
     # 获取建表语句
     @staticmethod
