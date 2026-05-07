@@ -59,11 +59,13 @@ class CkUtil:
                 raise ValueError(f"第 {i} 行数据列数 {len(cur)} 与字段数 {col_num} 不一致")
         
     @staticmethod
-    def insert(db:BaseCK, table: str, fields: list[str], data: list[list]):
+    def insert(db:BaseCK, table: str, fields: list[str], data: list[list],batch_size=100_000):
         CkUtil.check(fields,data)
         sql = CkUtil.insert_sql(table, fields)
         if not CkUtil.FORBID_INSERT:
-            db.execute(sql, data)
+            for i in range(0, len(data), batch_size):
+                batch = data[i:i+batch_size]
+                db.execute(sql, batch)
 
     @staticmethod
     def insert_dict(db:BaseCK, table: str,data: list[dict[str, any]]):
@@ -174,17 +176,19 @@ class CkUtil:
     
     # 创建并写入内存临时表(指定fields)
     @staticmethod
-    def insert_temporary_table(ck_db:BaseCK, data:list[list], fields:list[tuple[str, str]]) -> str:
+    def insert_temporary_table(db:BaseCK, data:list[list], fields:list[tuple[str, str]],batch_size=100_000) -> str:
         table = f"temporary_{uuid.uuid4().hex}"
         fields_sql = SqlUtil.create_fields(fields)
 
         sql = f"CREATE TEMPORARY TABLE {table} {fields_sql} ENGINE = TinyLog"
-        ck_db.execute(sql)
+        db.execute(sql)
 
         fields = [field[0] for field in fields]
         CkUtil.check(fields,data)
         sql = CkUtil.insert_sql(table, fields)
-        ck_db.execute(sql, data)
+        for i in range(0, len(data), batch_size):
+            batch = data[i:i+batch_size]
+            db.execute(sql, batch)
         return table
     
     # 批量进行分区替换

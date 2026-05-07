@@ -46,7 +46,7 @@ class MsUtil(object):
         return sql
 
     @staticmethod
-    def insert_temporary_table(db:BaseMS, data:list[list], fields:list[tuple[str, str]]) -> str:
+    def insert_temporary_table(db:BaseMS, data:list[list], fields:list[tuple[str, str]],batch_size=1000) -> str:
         table = f"temporary_{uuid.uuid4().hex}"
         fields_sql = SqlUtil.create_fields(fields)
 
@@ -56,7 +56,9 @@ class MsUtil(object):
         fields = [field[0] for field in fields]
         MsUtil.check(fields,data)
         sql = MsUtil.insert_sql(table, fields)
-        db.execute(sql, data)
+        for i in range(0, len(data), batch_size):
+            batch = data[i:i+batch_size]
+            db.execute(sql, batch)
         return table
 
     @staticmethod
@@ -73,11 +75,13 @@ class MsUtil(object):
                 raise ValueError(f"第 {i} 行数据列数 {len(cur)} 与字段数 {col_num} 不一致")
 
     @staticmethod
-    def insert(db:BaseMS, table: str, fields: list[str], data: list[list], is_ignore = False, duplicate:list[str]=[]):
+    def insert(db:BaseMS, table: str, fields: list[str], data: list[list], is_ignore = False, duplicate:list[str]=[],batch_size=1000):
         MsUtil.check(fields,data)
         sql = MsUtil.insert_sql(table, fields,is_ignore,duplicate)
         if not MsUtil.FORBID_INSERT:
-            db.execute(sql, data)
+            for i in range(0, len(data), batch_size):
+                batch = data[i:i+batch_size]
+                db.execute(sql, batch)
 
     
 
