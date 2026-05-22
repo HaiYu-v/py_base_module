@@ -16,7 +16,7 @@ class MsUtil(object):
     @staticmethod
     def duplicate(fields: list[str]) -> str:
         updates = ",\n".join(
-            f"{field} = IF({field} <> VALUES({field}), VALUES({field}), {field})"
+            f"{field} = VALUES({field})"
             for field in fields
         )
         sql = f"ON DUPLICATE KEY UPDATE\n{updates}"
