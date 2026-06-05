@@ -80,6 +80,7 @@ class MsUtil(object):
         MsUtil.check(fields,data)
         sql = MsUtil.insert_sql(table, fields,is_ignore,duplicate)
         if not MsUtil.FORBID_INSERT:
+            insert_total = 0
             for i in range(0, len(data), batch_size):
                 batch = data[i:i+batch_size]
                 db.execute(sql, batch)
