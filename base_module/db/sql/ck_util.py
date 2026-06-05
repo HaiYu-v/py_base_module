@@ -68,7 +68,7 @@ class CkUtil:
                 batch = data[i:i+batch_size]
                 db.execute(sql, batch)
                 insert_total += len(batch)
-                Log.log(f">>>>>> {table}已插入{insert_total}")
+                Log.log(f">>>>>> {table} 已插入{insert_total}")
 
 
     @staticmethod
