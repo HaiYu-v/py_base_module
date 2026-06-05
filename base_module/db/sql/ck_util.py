@@ -63,12 +63,16 @@ class CkUtil:
         CkUtil.check(fields,data)
         sql = CkUtil.insert_sql(table, fields)
         if not CkUtil.FORBID_INSERT:
+            insert_total = 0
             for i in range(0, len(data), batch_size):
                 batch = data[i:i+batch_size]
                 db.execute(sql, batch)
+                insert_total += len(batch)
+                Log.info(f">>>>>> {table}已插入{insert_total}")
+
 
     @staticmethod
-    def insert_dict(db:BaseCK, table: str,data: list[dict[str, any]]):
+    def insert_dict(db:BaseCK, table: str,data: list[dict[str, any]],batch_size=100_000):
         if not data or len(data) == 0 :
             return
 
@@ -81,7 +85,7 @@ class CkUtil:
 
         fields = list(data[0].keys())
         insert_data = [[d[f] for f in fields] for d in data]
-        CkUtil.insert(db, table, fields, insert_data)
+        CkUtil.insert(db, table, fields, insert_data,batch_size=100_000)
     
     # 删除表
     @staticmethod

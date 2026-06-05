@@ -4,6 +4,7 @@ from re import M
 import uuid
 from base_module import BaseMS
 from base_module import SqlUtil
+from base_module.info.log import Log
 
 class MsUtil(object):
     # 禁止插入
@@ -82,11 +83,13 @@ class MsUtil(object):
             for i in range(0, len(data), batch_size):
                 batch = data[i:i+batch_size]
                 db.execute(sql, batch)
+                insert_total += len(batch)
+                Log.info(f">>>>>> {table}已插入{insert_total}")
 
     
 
     @staticmethod
-    def insert_dict(db:BaseMS, table: str,data: list[dict[str, any]], is_ignore = False, duplicate:list[str]=[]):
+    def insert_dict(db:BaseMS, table: str,data: list[dict[str, any]], is_ignore = False, duplicate:list[str]=[],batch_size=1_000):
         if not data or len(data) == 0 :
             return
 
@@ -99,7 +102,7 @@ class MsUtil(object):
 
         fields = list(data[0].keys())
         insert_data = [[d[f] for f in fields] for d in data]
-        MsUtil.insert(db, table, fields, insert_data,is_ignore,duplicate)
+        MsUtil.insert(db, table, fields, insert_data,is_ignore,duplicate,batch_size)
 
     # 获取建表语句
     @staticmethod
