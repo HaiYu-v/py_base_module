@@ -34,6 +34,7 @@ class Span:
     error: Optional[str] = None
     tags: dict = field(default_factory=dict)
     children: list = field(default_factory=list)  # 仅内存聚合用
+    not_log: bool = True # 是否打印日志
 
     def finish(self, error: Optional[Exception] = None):
         self.end_time = time.time()
@@ -43,6 +44,7 @@ class Span:
             self.error = traceback.format_exc()
 
     def to_log(self) -> str:
+        
         name = f"name[{self.name}] " if self.name else ''
         start = datetime.datetime.fromtimestamp(self.start_time).strftime("%Y-%m-%d %H:%M:%S")
         tags_str = ("tags[" + ",".join(f"{k}={v}" for k, v in self.tags.items())+"] ") if self.tags else ""
@@ -118,6 +120,8 @@ class TraceCollector:
         """逐行纯文本输出每个 span，输出后清理当次链路"""
         spans = self._collect(root)
         for span in spans:
+            if span.not_log:
+                continue
             logger.info(span.to_log())
         for span in spans:
             self._spans.pop(span.span_id, None)
@@ -169,8 +173,42 @@ def trace(_func, tags: dict = None):
         name = _func
     return decorator
 
+def trace_log(_func, tags: dict = None):
+    """
+    无侵入链路追踪装饰器，支持同步和异步函数。
 
-def _make_span(span_func:str, span_name: str, tags: dict) -> tuple[Span, bool]:
+    用法:
+        @trace
+        def my_func(): ...
+
+        @trace(name="custom", tags={"service": "order"})
+        async def my_async_func(): ...
+    """
+    name = None
+    def decorator(func):
+        span_func = f"{func.__qualname__}"
+        span_name = name
+        func.desc = name
+        if _is_async(func):
+            @functools.wraps(func)
+            async def async_wrapper(*args, **kwargs):
+                return await _run_async(func, span_func, span_name, tags or {}, args, kwargs, False)
+            return async_wrapper
+        else:
+            @functools.wraps(func)
+            def sync_wrapper(*args, **kwargs):
+                return _run_sync(func, span_func, span_name, tags or {}, args, kwargs, False)
+            return sync_wrapper
+
+    # 支持 @trace 和 @trace(...) 两种用法
+    if not isinstance(_func, str):
+        return decorator(_func)
+    else:
+        name = _func
+    return decorator
+
+
+def _make_span(span_func:str, span_name: str, tags: dict, not_log:bool = True) -> tuple[Span, bool]:
     """创建 Span，返回 (span, is_root)"""
     stack = _get_stack()
     is_root = not stack
@@ -191,6 +229,7 @@ def _make_span(span_func:str, span_name: str, tags: dict) -> tuple[Span, bool]:
         name=span_name,
         start_time=time.time(),
         tags=tags,
+        not_log=not_log
     )
     _collector.add(span)
     stack.append(span)
@@ -209,8 +248,8 @@ def _finish_span(span: Span, is_root: bool, error: Optional[Exception]):
         _collector.emit(span)
 
 
-def _run_sync(func, span_func, span_name, tags, args, kwargs):
-    span, is_root = _make_span(span_func, span_name, tags)
+def _run_sync(func, span_func, span_name, tags, args, kwargs, not_log:bool = True):
+    span, is_root = _make_span(span_func, span_name, tags, not_log)
     exc = None
     try:
         Log.log(f"====== [{span.name}] [{func.__name__}]")
@@ -226,8 +265,8 @@ def _run_sync(func, span_func, span_name, tags, args, kwargs):
 
 
 
-async def _run_async(func, span_func, span_name, tags, args, kwargs):
-    span, is_root = _make_span(span_func, span_name, tags)
+async def _run_async(func, span_func, span_name, tags, args, kwargs, not_log:bool = True):
+    span, is_root = _make_span(span_func, span_name, tags,not_log)
     exc = None
     try:
         Log.log(f"====== [{span.name}] [{func.__name__}]")
