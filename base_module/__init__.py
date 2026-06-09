@@ -27,6 +27,7 @@ from .utils.file.file_util import FileUtil
 from .utils.Country_util import CountryUtil
 from .utils.json_util import JsonUtil
 from .info.tracer.tracer import trace
+from .info.tracer.tracer import trace_log
 from .info.tracer.tracer import ManualSpan
 from .info.tracer.tracer import get_span
 
@@ -60,6 +61,7 @@ __all__ = [
     "CountryUtil",
     "JsonUtil",
     "trace",
+    "trace_log",
     "ManualSpan",
     "get_span"
 ]
