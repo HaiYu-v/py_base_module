@@ -1,6 +1,4 @@
 from .exception.Business_exception import BusinessException
-from .decorator.Business import Business
-from .info.info_cache import InfoCache
 from .info.log import Log
 from .result.result_enum import ResultEnum
 from .db.my_db import BaseMS
@@ -33,8 +31,6 @@ from .info.tracer.tracer import get_span
 
 __all__ = [ 
     "BusinessException",
-    "Business",
-    "InfoCache",
     "Log",
     "ResultEnum",
     "BaseMS",
