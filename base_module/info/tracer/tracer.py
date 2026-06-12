@@ -56,10 +56,10 @@ class Span:
             f"trace[{self.trace_id[:8]}] "
             f"{parent_str} "
             f"start[{start}] "
-            f"{name}"
-            f"func[{self.func}] "
             f"{duration_str}"
             f"{status_str}"
+            f"{name}"
+            f"func[{self.func}] "
             f"{tags_str}"
             f"{error_str}"
         )
