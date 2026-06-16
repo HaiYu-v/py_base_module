@@ -112,13 +112,13 @@ class MsUtil(object):
         return f"UPDATE {table} SET {set_clause} WHERE {where_clause}"
 
     @staticmethod
-    def update(db: BaseMS, table: str, fields: list[str], where_fields: list[str], data: list[list], batch_size=1000):
+    def update(db: BaseMS, table: str, data: list[list], set_fields: list[str], where_fields: list[str], batch_size=1000):
         """
         data 每行格式: [set字段值..., where字段值...]
         """
         if not data:
             return
-        sql = MsUtil.update_sql(table, fields, where_fields)
+        sql = MsUtil.update_sql(table, set_fields, where_fields)
         update_total = 0
         for i in range(0, len(data), batch_size):
             batch = data[i:i + batch_size]
