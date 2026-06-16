@@ -105,6 +105,41 @@ class MsUtil(object):
         insert_data = [[d[f] for f in fields] for d in data]
         MsUtil.insert(db, table, fields, insert_data,is_ignore,duplicate,batch_size)
 
+    @staticmethod
+    def update_sql(table: str, fields: list[str], where_fields: list[str]) -> str:
+        set_clause = ", ".join(f"`{f}` = %s" for f in fields)
+        where_clause = " AND ".join(f"`{f}` = %s" for f in where_fields)
+        return f"UPDATE {table} SET {set_clause} WHERE {where_clause}"
+
+    @staticmethod
+    def update(db: BaseMS, table: str, fields: list[str], where_fields: list[str], data: list[list], batch_size=1000):
+        """
+        data 每行格式: [set字段值..., where字段值...]
+        """
+        if not data:
+            return
+        sql = MsUtil.update_sql(table, fields, where_fields)
+        update_total = 0
+        for i in range(0, len(data), batch_size):
+            batch = data[i:i + batch_size]
+            db.execute(sql, batch)
+            update_total += len(batch)
+            Log.log(f">>>>>> {table} 已更新{update_total}")
+
+    @staticmethod
+    def update_dict(db: BaseMS, table: str, where_fields: list[str], data: list[dict[str, any]], batch_size=1000):
+        """
+        data 每行为完整字段的 dict，where_fields 指定作为 WHERE 条件的字段，其余字段作为 SET
+        """
+        if not data:
+            return
+        all_fields = list(data[0].keys())
+        set_fields = [f for f in all_fields if f not in where_fields]
+        if not set_fields:
+            raise ValueError("没有可更新的字段（所有字段都是 WHERE 条件）")
+        rows = [[d[f] for f in set_fields] + [d[f] for f in where_fields] for d in data]
+        MsUtil.update(db, table, set_fields, where_fields, rows, batch_size)
+
     # 获取建表语句
     @staticmethod
     def get_create_table_sql(db:BaseMS, table: str) -> str:
