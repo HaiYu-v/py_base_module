@@ -137,7 +137,7 @@ class MsUtil(object):
         if not set_fields:
             raise ValueError("没有可更新的字段（所有字段都是 WHERE 条件）")
         rows = [[d[f] for f in set_fields] + [d[f] for f in where_fields] for d in data]
-        MsUtil.update(db, table, set_fields, where_fields, rows, batch_size)
+        MsUtil.update(db, table, rows, set_fields, where_fields, batch_size)
 
     # 获取建表语句
     @staticmethod
