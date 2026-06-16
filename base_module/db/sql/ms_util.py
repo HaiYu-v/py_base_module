@@ -127,14 +127,13 @@ class MsUtil(object):
             Log.log(f">>>>>> {table} 已更新{update_total}")
 
     @staticmethod
-    def update_dict(db: BaseMS, table: str, where_fields: list[str], data: list[dict[str, any]], batch_size=1000):
+    def update_dict(db: BaseMS, table: str, data: list[dict[str, any]], set_fields: list[str], where_fields: list[str], batch_size=1000):
         """
-        data 每行为完整字段的 dict，where_fields 指定作为 WHERE 条件的字段，其余字段作为 SET
+        data 每行为完整字段的 dict，where_fields 指定作为 WHERE 条件的字段
+        set_fields 指定要更新的字段，默认为 dict 中除 where_fields 以外的所有字段
         """
         if not data:
             return
-        all_fields = list(data[0].keys())
-        set_fields = [f for f in all_fields if f not in where_fields]
         if not set_fields:
             raise ValueError("没有可更新的字段（所有字段都是 WHERE 条件）")
         rows = [[d[f] for f in set_fields] + [d[f] for f in where_fields] for d in data]
