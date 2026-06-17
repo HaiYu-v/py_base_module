@@ -15,24 +15,39 @@ class Result(BaseModel, Generic[T]):
         super().__init__(code=code, message=message, data=data, **kwargs)
 
     @staticmethod
-    def success(data: Any = None, message:str = None) -> "Result":
+    def success(message:str = None) -> "Result":
         """成功返回"""
-        return Result.from_enum(ResultEnum.SUCCESS, data, message)
+        return Result._enum(ResultEnum.SUCCESS, message)
 
     @staticmethod
-    def error(data: Any = None, message:str = None) -> "Result":
+    def error(message:str = None) -> "Result":
         """失败返回"""
-        return Result.from_enum(ResultEnum.ERROR, data, message)
+        return Result._enum(ResultEnum.ERROR, message)
+    
+    @staticmethod
+    def success_data(message:str = None, data: Any = None) -> "Result":
+        """成功返回"""
+        return Result._enum(ResultEnum.SUCCESS, message, data)
 
     @staticmethod
-    def from_enum(result_enum: BaseResultEnum, data: Any = None, message:str = None) -> "Result":
+    def error_data(message:str = None, data: Any = None) -> "Result":
+        """失败返回"""
+        return Result._enum(ResultEnum.ERROR, message, data)
+
+    @staticmethod
+    def from_enum(result_enum: BaseResultEnum,  data: Any = None) -> "Result":
+        """从枚举创建返回体"""
+        return Result._enum(ResultEnum.ERROR, None, data)
+    
+    def _enum(result_enum: BaseResultEnum, message:str = None, data: Any = None) -> "Result":
         """从枚举创建返回体"""
         return Result(
             code=result_enum.code,
             message=result_enum.message if message is None else message,
             data=data
         )
-
+    
+    
     class Config:
         json_schema_extra = {
             "example": {
