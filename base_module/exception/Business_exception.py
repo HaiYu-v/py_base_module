@@ -1,11 +1,11 @@
 
 import inspect
 import os
-from base_module.result.result_enum import ResultEnum
+from base_module.result.result_enum import BaseResultEnum
 
 '''
 自定义的业务异常
-1.强制使用ResultEnum，保证有统一规范的错误信息（self.code.message），也能保留下自定义的信息
+1.强制使用BaseResultEnum，保证有统一规范的错误信息（self.code.message），也能保留下自定义的信息
 2.继承堆栈，和异常嵌套信息（多异常嵌套时，只嵌套message，而不嵌套堆栈）
 
 异常消息的示例：
@@ -16,9 +16,9 @@ common.Business_exception.BusinessException:
 
 class BusinessException(Exception):
 
-    def __init__(self, message: str = None, code: ResultEnum = None, cause: Exception = None, stack: list[inspect.FrameInfo] = None):
+    def __init__(self, message: str = None, code: BaseResultEnum = None, cause: Exception = None, stack: list[inspect.FrameInfo] = None):
         """
-        :param code: ResultEnum 返回结果枚举
+        :param code: BaseResultEnum 返回结果枚举
         :param message: 可选，覆盖 code 的默认消息
         :param cause: 可选，原始异常
         :param Bcause: 可选，BusinessException异常, 继承code,保留最初异常的code
@@ -26,7 +26,7 @@ class BusinessException(Exception):
 
         # 没有提供code，就使用默认code
         self.code = cause.code if (cause and isinstance(cause, BusinessException)) else (
-            code if code else ResultEnum.ERROR)
+            code if code else BaseResultEnum.ERROR)
 
         # 如果提供了 message，用 message，否则用code的消息
         msg = message if message else code.message

@@ -10,7 +10,7 @@ from enum import Enum
 1001，1002 表示某类型下的不同失败
 
 '''
-class ResultEnum(Enum):
+class BaseResultEnum(Enum):
     # 基础失败
     ERROR = (1000,"操作失败")
     SUCCESS = (200, "操作成功")

@@ -1,6 +1,6 @@
 from .exception.Business_exception import BusinessException
 from .info.log import Log
-from .result.result_enum import ResultEnum
+from .result.result_enum import BaseResultEnum
 from .db.my_db import BaseMS
 from .db.my_ck import BaseCK
 from .db.my_sl import SL
@@ -29,14 +29,14 @@ from .info.tracer.tracer import trace_log
 from .info.tracer.tracer import ManualSpan
 from .info.tracer.tracer import get_span
 from .result.result import Result
-from .result.result_enum import ResultEnum
+from .result.result_enum import BaseBaseResultEnum
 
 __all__ = [
     "Result",
-    "ResultEnum", 
+    "BaseBaseResultEnum", 
     "BusinessException",
     "Log",
-    "ResultEnum",
+    "BaseResultEnum",
     "BaseMS",
     "BaseCK",
     "SL",

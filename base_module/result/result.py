@@ -1,6 +1,6 @@
 from typing import Any, Optional, Generic, TypeVar
 from pydantic import BaseModel
-from result.result_enum import ResultEnum
+from result.result_enum import BaseResultEnum
 
 T = TypeVar('T')
 
@@ -30,7 +30,7 @@ class Result(BaseModel, Generic[T]):
         )
 
     @staticmethod
-    def from_enum(result_enum: ResultEnum, data: Any = None) -> "Result":
+    def from_enum(result_enum: BaseResultEnum, data: Any = None) -> "Result":
         """从枚举创建返回体"""
         return Result(
             code=result_enum.code,
