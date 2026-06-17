@@ -15,21 +15,21 @@ class Result(BaseModel, Generic[T]):
         super().__init__(code=code, message=message, data=data, **kwargs)
 
     @staticmethod
-    def success(data: Any = None) -> "Result":
+    def success(data: Any = None, message:str = None) -> "Result":
         """成功返回"""
-        return Result.from_enum(ResultEnum.SUCCESS, data)
+        return Result.from_enum(ResultEnum.SUCCESS, data, message)
 
     @staticmethod
-    def error(data: Any = None) -> "Result":
+    def error(data: Any = None, message:str = None) -> "Result":
         """失败返回"""
-        return Result.from_enum(ResultEnum.ERROR, data)
+        return Result.from_enum(ResultEnum.ERROR, data, message)
 
     @staticmethod
-    def from_enum(result_enum: BaseResultEnum, data: Any = None) -> "Result":
+    def from_enum(result_enum: BaseResultEnum, data: Any = None, message:str = None) -> "Result":
         """从枚举创建返回体"""
         return Result(
             code=result_enum.code,
-            message=result_enum.message,
+            message=result_enum.message if message is None else message,
             data=data
         )
 
