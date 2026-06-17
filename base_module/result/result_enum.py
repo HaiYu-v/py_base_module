@@ -11,11 +11,6 @@ from enum import Enum
 
 '''
 class BaseResultEnum(Enum):
-    # 基础失败
-    ERROR = (1000,"操作失败")
-    SUCCESS = (200, "操作成功")
-
-
     def __init__(self, code: int, message: str):
         self._code = code
         self._message = message
@@ -30,3 +25,13 @@ class BaseResultEnum(Enum):
 
     def __str__(self):
         return f"[{self._code}] {self._message}"
+    
+    
+class ResultEnum(BaseResultEnum):
+    # 基础失败
+    ERROR = (1000,"操作失败")
+    SUCCESS = (200, "操作成功")
+
+
+
+

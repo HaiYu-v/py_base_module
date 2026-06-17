@@ -29,14 +29,13 @@ from .info.tracer.tracer import trace_log
 from .info.tracer.tracer import ManualSpan
 from .info.tracer.tracer import get_span
 from .result.result import Result
-from .result.result_enum import BaseBaseResultEnum
+from .result.result_enum import BaseResultEnum
 
 __all__ = [
     "Result",
-    "BaseBaseResultEnum", 
+    "BaseResultEnum",
     "BusinessException",
     "Log",
-    "BaseResultEnum",
     "BaseMS",
     "BaseCK",
     "SL",

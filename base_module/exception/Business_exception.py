@@ -1,7 +1,7 @@
 
 import inspect
 import os
-from base_module.result.result_enum import BaseResultEnum
+from base_module.result.result_enum import BaseResultEnum,ResultEnum
 
 '''
 自定义的业务异常
@@ -26,7 +26,7 @@ class BusinessException(Exception):
 
         # 没有提供code，就使用默认code
         self.code = cause.code if (cause and isinstance(cause, BusinessException)) else (
-            code if code else BaseResultEnum.ERROR)
+            code if code else ResultEnum.ERROR)
 
         # 如果提供了 message，用 message，否则用code的消息
         msg = message if message else code.message
