@@ -1,6 +1,6 @@
 from typing import Any, Optional, Generic, TypeVar
 from pydantic import BaseModel
-from result.result_enum import BaseResultEnum,ResultEnum
+from base_module.result.result_enum import BaseResultEnum,ResultEnum
 
 T = TypeVar('T')
 
