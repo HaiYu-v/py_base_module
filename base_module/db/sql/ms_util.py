@@ -5,6 +5,18 @@ import uuid
 from base_module import BaseMS
 from base_module import SqlUtil
 from base_module.info.log import Log
+import json
+from datetime import datetime, date
+
+
+# date, datetime 的json序列化
+class DateTimeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.strftime('%Y-%m-%d %H:%M:%S')
+        if isinstance(obj, date):
+            return obj.strftime('%Y-%m-%d')
+        return super().default(obj)
 
 class MsUtil(object):
     # 禁止插入
@@ -75,7 +87,7 @@ class MsUtil(object):
             normalized_row = []
             for value in row:
                 if isinstance(value, (dict, list)):
-                    normalized_row.append(json.dumps(value, ensure_ascii=False))
+                    normalized_row.append(json.dumps(value, ensure_ascii=False, cls=DateTimeEncoder))
                 else:
                     normalized_row.append(value)
             normalized.append(normalized_row)
