@@ -1,6 +1,6 @@
 from typing import Any, Optional, Generic, TypeVar
 from pydantic import BaseModel
-from result.result_enum import BaseResultEnum
+from result.result_enum import BaseResultEnum,ResultEnum
 
 T = TypeVar('T')
 
@@ -11,23 +11,18 @@ class Result(BaseModel, Generic[T]):
     message: str
     data: Optional[T] = None
 
-    @staticmethod
-    def success(data: Any = None, message: str = "操作成功") -> "Result":
-        """成功返回"""
-        return Result(
-            code=200,
-            message=message,
-            data=data
-        )
+    def __init__(self, code: int, message: str, data: Optional[T] = None, **kwargs):
+        super().__init__(code=code, message=message, data=data, **kwargs)
 
     @staticmethod
-    def error(code: int = 1000, message: str = "操作失败", data: Any = None) -> "Result":
+    def success(data: Any = None) -> "Result":
+        """成功返回"""
+        return Result.from_enum(ResultEnum.SUCCESS, data)
+
+    @staticmethod
+    def error(data: Any = None) -> "Result":
         """失败返回"""
-        return Result(
-            code=code,
-            message=message,
-            data=data
-        )
+        return Result.from_enum(ResultEnum.ERROR, data)
 
     @staticmethod
     def from_enum(result_enum: BaseResultEnum, data: Any = None) -> "Result":
