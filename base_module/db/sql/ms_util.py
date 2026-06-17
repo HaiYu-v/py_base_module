@@ -63,6 +63,25 @@ class MsUtil(object):
         return table
 
     @staticmethod
+    def normalize_data(data: list[list]) -> list[list]:
+        """
+        将二维数组中的 dict/list 类型转换为 JSON 字符串
+        :param data: 原始二维数组
+        :return: 处理后的二维数组
+        """
+        import json
+        normalized = []
+        for row in data:
+            normalized_row = []
+            for value in row:
+                if isinstance(value, (dict, list)):
+                    normalized_row.append(json.dumps(value, ensure_ascii=False))
+                else:
+                    normalized_row.append(value)
+            normalized.append(normalized_row)
+        return normalized
+
+    @staticmethod
     def check(fields: list[str], data: list[list]):
         if not fields or len(fields) == 0:
             raise Exception("字段列表不能为空")
@@ -78,6 +97,7 @@ class MsUtil(object):
     @staticmethod
     def insert(db:BaseMS, table: str, fields: list[str], data: list[list], is_ignore = False, duplicate:list[str]=[],batch_size=1000):
         MsUtil.check(fields,data)
+        data = MsUtil.normalize_data(data)
         sql = MsUtil.insert_sql(table, fields,is_ignore,duplicate)
         if not MsUtil.FORBID_INSERT:
             insert_total = 0
