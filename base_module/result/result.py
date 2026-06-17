@@ -5,34 +5,34 @@ from result.result_enum import ResultEnum
 T = TypeVar('T')
 
 
-class ResultResponse(BaseModel, Generic[T]):
+class Result(BaseModel, Generic[T]):
     """统一返回体"""
     code: int
     message: str
     data: Optional[T] = None
 
     @staticmethod
-    def success(data: Any = None, message: str = "操作成功") -> "ResultResponse":
+    def success(data: Any = None, message: str = "操作成功") -> "Result":
         """成功返回"""
-        return ResultResponse(
+        return Result(
             code=200,
             message=message,
             data=data
         )
 
     @staticmethod
-    def error(code: int = 1000, message: str = "操作失败", data: Any = None) -> "ResultResponse":
+    def error(code: int = 1000, message: str = "操作失败", data: Any = None) -> "Result":
         """失败返回"""
-        return ResultResponse(
+        return Result(
             code=code,
             message=message,
             data=data
         )
 
     @staticmethod
-    def from_enum(result_enum: ResultEnum, data: Any = None) -> "ResultResponse":
+    def from_enum(result_enum: ResultEnum, data: Any = None) -> "Result":
         """从枚举创建返回体"""
-        return ResultResponse(
+        return Result(
             code=result_enum.code,
             message=result_enum.message,
             data=data

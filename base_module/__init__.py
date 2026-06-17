@@ -28,8 +28,12 @@ from .info.tracer.tracer import trace
 from .info.tracer.tracer import trace_log
 from .info.tracer.tracer import ManualSpan
 from .info.tracer.tracer import get_span
+from .result.result import Result
+from .result.result_enum import ResultEnum
 
-__all__ = [ 
+__all__ = [
+    "Result",
+    "ResultEnum", 
     "BusinessException",
     "Log",
     "ResultEnum",
