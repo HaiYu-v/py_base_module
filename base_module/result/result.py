@@ -1,5 +1,5 @@
 from typing import Any, Optional, Generic, TypeVar
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from base_module.result.result_enum import BaseResultEnum,ResultEnum
 
 T = TypeVar('T')
@@ -48,11 +48,12 @@ class Result(BaseModel, Generic[T]):
         )
     
     
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "code": 200,
                 "message": "操作成功",
                 "data": {}
             }
         }
+    )
