@@ -45,6 +45,3 @@ class BaseModel(SQLModel):
         description="更新时间（数据库生成，记录被修改时自动刷新）",
     )
     dr: str = Field(default='N', index=True, max_length=1, description="删除标记(Y/N)")
-
-    def desc() -> str:
-        return ''

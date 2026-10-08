@@ -20,7 +20,7 @@ from .info.tracer.tracer import get_span
 from .result.result import Result
 from .result.result_enum import BaseResultEnum
 # 必须放在 trace_log 之后：base_node 内部 `from base_module import trace_log`
-from .model import BaseModel, generate_id, generate_uuid
+from .model import BaseModel, BaseTree, generate_id, generate_uuid
 from .node import BaseNode
 
 __all__ = [
@@ -45,6 +45,7 @@ __all__ = [
     "ManualSpan",
     "get_span",
     "BaseModel",
+    "BaseTree",
     "generate_id",
     "generate_uuid",
     "BaseNode",
