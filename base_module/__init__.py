@@ -22,6 +22,7 @@ from .result.result_enum import BaseResultEnum
 # 必须放在 trace_log 之后：base_node 内部 `from base_module import trace_log`
 from .model.base_model import BaseModel
 from .model.base_tree import BaseTree
+from .model.base_file import BaseFile
 from .node.base_node import BaseNode
 
 __all__ = [
@@ -47,5 +48,6 @@ __all__ = [
     "get_span",
     "BaseModel",
     "BaseTree",
+    "BaseFile",
     "BaseNode",
 ]
