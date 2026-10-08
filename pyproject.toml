@@ -10,10 +10,12 @@ authors = [
     {name = "胡亚北", email = "2239473866@q.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.8"
+# 与 reader-work 各项目保持一致，本机为 3.13.2
+requires-python = ">=3.13"
 
 # 依赖
 dependencies = [
+    # 数据库驱动：db/my_db*.py 依赖 pymysql，db/my_ck*.py 依赖 clickhouse-driver
     "clickhouse-driver>=0.2.9",
     "PyMySQL>=1.1.2",
     "requests>=2.32.5",
@@ -23,5 +25,14 @@ dependencies = [
     "pydantic>=2.13.4",
 ]
 
+# 只用于本地开发 / 测试，不随包安装
+# 安装：uv sync        （含 dev 组）
+#       uv sync --no-dev（只要运行时依赖）
+[dependency-groups]
+dev = [
+    "pytest>=8",
+]
+
 [tool.setuptools.packages.find]
 where = ["."]
+include = ["base_module*"]

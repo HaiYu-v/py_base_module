@@ -7,12 +7,6 @@ from .db.my_sl import SL
 from .db.my_db_pool import BaseMsPool
 from .db.my_ck_pool import BaseCkPool
 from .utils.time_util import TimeUtil
-from .db.sql.sql_util import SqlUtil
-from .db.sql.ck_util import CkUtil
-from .db.sql.ck_util import ReplaceConst
-from .db.sql.ck_util import ReplaceTableContext
-from .db.sql.ms_util import MsUtil
-from .db.sql.sl_util import SlUtil
 from .send.qi_wei_send import QiWeiSend
 from .send.file_enum import FileEnum
 from .send.Isend import ISend
@@ -42,12 +36,6 @@ __all__ = [
     "BaseCkPool",
     "BaseMsPool",
     "TimeUtil",
-    "SqlUtil",
-    "MsUtil",
-    "CkUtil",
-    "ReplaceConst"
-    "ReplaceTableContext",
-    "SlUtil",
     "QiWeiSend",
     "FileEnum",
     "ISend",

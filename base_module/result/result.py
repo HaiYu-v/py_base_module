@@ -8,42 +8,42 @@ T = TypeVar('T')
 class Result(BaseModel, Generic[T]):
     """统一返回体"""
     code: int
-    message: str
+    msg: str
     data: Optional[T] = None
 
-    def __init__(self, code: int, message: str, data: Optional[T] = None, **kwargs):
-        super().__init__(code=code, message=message, data=data, **kwargs)
+    def __init__(self, code: int, msg: str, data: Optional[T] = None, **kwargs):
+        super().__init__(code=code, msg=msg, data=data, **kwargs)
 
     @staticmethod
-    def success(message:str = None) -> "Result":
+    def success(msg:str = None) -> "Result":
         """成功返回"""
-        return Result._enum(ResultEnum.SUCCESS, message)
+        return Result._enum(ResultEnum.SUCCESS, msg)
 
     @staticmethod
-    def error(message:str = None) -> "Result":
+    def error(msg:str = None) -> "Result":
         """失败返回"""
-        return Result._enum(ResultEnum.ERROR, message)
+        return Result._enum(ResultEnum.ERROR, msg)
     
     @staticmethod
-    def success_data(message:str = None, data: Any = None) -> "Result":
+    def success_data(msg:str = None, data: Any = None) -> "Result":
         """成功返回"""
-        return Result._enum(ResultEnum.SUCCESS, message, data)
+        return Result._enum(ResultEnum.SUCCESS, msg, data)
 
     @staticmethod
-    def error_data(message:str = None, data: Any = None) -> "Result":
+    def error_data(msg:str = None, data: Any = None) -> "Result":
         """失败返回"""
-        return Result._enum(ResultEnum.ERROR, message, data)
+        return Result._enum(ResultEnum.ERROR, msg, data)
 
     @staticmethod
     def from_enum(result_enum: BaseResultEnum,  data: Any = None) -> "Result":
         """从枚举创建返回体"""
         return Result._enum(ResultEnum.ERROR, None, data)
     
-    def _enum(result_enum: BaseResultEnum, message:str = None, data: Any = None) -> "Result":
+    def _enum(result_enum: BaseResultEnum, msg:str = None, data: Any = None) -> "Result":
         """从枚举创建返回体"""
         return Result(
             code=result_enum.code,
-            message=result_enum.message if message is None else message,
+            msg=result_enum.msg if msg is None else msg,
             data=data
         )
     
@@ -52,7 +52,7 @@ class Result(BaseModel, Generic[T]):
         json_schema_extra={
             "example": {
                 "code": 200,
-                "message": "操作成功",
+                "msg": "操作成功",
                 "data": {}
             }
         }

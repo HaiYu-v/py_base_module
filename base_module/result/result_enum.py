@@ -11,20 +11,20 @@ from enum import Enum
 
 '''
 class BaseResultEnum(Enum):
-    def __init__(self, code: int, message: str):
+    def __init__(self, code: int, msg: str):
         self._code = code
-        self._message = message
+        self._msg = msg
 
     @property
     def code(self) -> int:
         return self._code
 
     @property
-    def message(self) -> str:
-        return self._message
+    def msg(self) -> str:
+        return self._msg
 
     def __str__(self):
-        return f"[{self._code}] {self._message}"
+        return f"[{self._code}] {self._msg}"
     
     
 class ResultEnum(BaseResultEnum):

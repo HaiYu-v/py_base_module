@@ -1,4 +1,19 @@
-__pycache__
+# —— Python ——
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# —— 构建产物 ——
+build/
+dist/
+
+# —— 测试 ——
+.pytest_cache/
+.coverage
+
+# —— 本地配置（不入库）——
 config.yaml
 .vscode/launch.json
 .vscode/settings.json
