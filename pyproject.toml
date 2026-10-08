@@ -15,14 +15,13 @@ requires-python = ">=3.13"
 
 # 依赖
 dependencies = [
-    # 数据库驱动：db/my_db*.py 依赖 pymysql，db/my_ck*.py 依赖 clickhouse-driver
-    "clickhouse-driver>=0.2.9",
-    "PyMySQL>=1.1.2",
     "requests>=2.32.5",
     "openpyxl>=3.1.5",
     "matplotlib>=3.7.5",
     "scipy>=1.10.1",
     "pydantic>=2.13.4",
+    "sqlmodel>=0.0.48",
+    "snowflake-id>=1.0.2",
 ]
 
 # 只用于本地开发 / 测试，不随包安装
