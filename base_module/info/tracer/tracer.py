@@ -246,6 +246,10 @@ def _finish_span(span: Span, is_root: bool, error: Optional[Exception]):
         pass
     if is_root:
         _collector.emit(span)
+        # ⚠ 链路结束就把 trace_id 清掉：`_make_span` 里是「为空才生成」（`_trace_id.get() or uuid4()`），
+        #   跑完不清的话，同一个进程/线程里后面每一次根 span 都会**复用第一个 trace_id**
+        #   （实测三次不相干的调用 trace_id 一模一样，只有 span_id 是唯一的）。
+        _trace_id.set(None)
 
 
 def _run_sync(func, span_func, span_name, tags, args, kwargs, not_log:bool = True):
