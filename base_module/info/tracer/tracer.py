@@ -48,12 +48,15 @@ class Span:
         name = f"name[{self.name}] " if self.name else ''
         start = datetime.datetime.fromtimestamp(self.start_time).strftime("%Y-%m-%d %H:%M:%S")
         tags_str = ("tags[" + ",".join(f"{k}={v}" for k, v in self.tags.items())+"] ") if self.tags else ""
-        parent_str = f"span[{self.parent_id[:8]}-{self.span_id[:8]}]" if self.parent_id else f"span[        -{self.span_id[:8]}]"
+        # ⚠ 一律打全，不截断：日志里出现的 id 要和落库 / 别处用的**是同一个字符串**
+        parent_str = f"span[{self.parent_id}-{self.span_id}]" if self.parent_id else f"span[-{self.span_id}]"
         error_str = f"error[{self.error.splitlines()[-1]}] " if self.error else ""
         duration_str = f"duration[{self.duration_ms}ms] " if self.duration_ms else ""
         status_str = f"status[{self.status}] " if self.duration_ms else ""
         return (
-            f"trace[{self.trace_id[:8]}] "
+            # ⚠ trace_id **打全**：它就是要和任务表的 `run_id` 对上的那个值，
+            #   只打前 8 位的话两边字符串不一样，只能靠前缀猜（用户口径：对不上就是对不上）。
+            f"trace[{self.trace_id}] "
             f"{parent_str} "
             f"start[{start}] "
             f"{duration_str}"
@@ -223,7 +226,7 @@ def _make_span(span_func:str, span_name: str, tags: dict, not_log:bool = True) -
 
     span = Span(
         trace_id=trace_id,
-        span_id=uuid.uuid4().hex[:16],
+        span_id=uuid.uuid4().hex,
         parent_id=parent_id,
         func=span_func,
         name=span_name,
