@@ -24,6 +24,7 @@ from .model.base_model import BaseModel
 from .model.base_tree import BaseTree
 from .model.base_file import BaseFile
 from .node.base_node import BaseNode
+from .model.base_material import BaseMaterial
 # 必须放在 BaseModel 之后：base_task 内部 `from base_module import BaseModel`
 from .data_pipeline import (
     DEFAULT_DEADLINE_HOURS,
@@ -60,6 +61,7 @@ __all__ = [
     "BaseTree",
     "BaseFile",
     "BaseNode",
+    "BaseMaterial",
     "BaseTask",
     "TaskState",
     "PayloadT",
