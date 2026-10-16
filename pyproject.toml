@@ -22,6 +22,8 @@ dependencies = [
     "pydantic>=2.13.4",
     "sqlmodel>=0.0.48",
     "snowflake-id>=1.0.2",
+    # base_module/info/api_log.py 的接口日志中间件（FastAPI 项目本来就会装到它）
+    "starlette>=0.37.0",
 ]
 
 # 只用于本地开发 / 测试，不随包安装

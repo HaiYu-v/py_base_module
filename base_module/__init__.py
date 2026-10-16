@@ -35,6 +35,17 @@ from .data_pipeline import (
     TaskState,
     payload_column,
 )
+# 接口日志（中间件 + @log_api）：只写文本文件；依赖 starlette（pyproject 已声明）
+from .info.api_log import (
+    ApiLog,
+    ApiLogMiddleware,
+    current_log,
+    current_request_id,
+    log_api,
+    record_api_result,
+    set_current_user,
+    write_api_log,
+)
 
 __all__ = [
     "Result",
@@ -69,4 +80,12 @@ __all__ = [
     "DEFAULT_DEADLINE_HOURS",
     "OPEN_STATES",
     "payload_column",
+    "ApiLog",
+    "ApiLogMiddleware",
+    "log_api",
+    "write_api_log",
+    "current_log",
+    "current_request_id",
+    "set_current_user",
+    "record_api_result",
 ]

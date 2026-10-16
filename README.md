@@ -11,6 +11,7 @@ base_module/
 ├── 📁 info/ (日志与追踪模块)
 │   ├── __init__.py                                       # 信息模块初始化
 │   ├── log.py                                            # 日志打印工具（进程/线程ID、单实例检测）
+│   ├── api_log.py                                         # 接口日志（ApiLogMiddleware + @log_api，只写 log/api 文本文件）
 │   │
 │   └── 📁 tracer/ (链路追踪)
 │       └── tracer.py                                     # 无侵入式链路追踪装饰器（@trace、异步支持、树状日志输出）
