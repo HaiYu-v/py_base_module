@@ -1,3 +1,5 @@
+from datetime import date
+
 from base_module import BaseModel
 from pydantic import Field
 class BaseMaterial(BaseModel):
@@ -8,6 +10,7 @@ class BaseMaterial(BaseModel):
     author: str = Field(default="", description="作者")
     url: str = Field(default="", description="来源地址")
     kind: str = Field(default="pending", description="素材类型")
+    publishDate: date = Field(default=None, description="发布时间")
     title: str = Field(default="", description="素材名")
     title_cn: str = Field(default="", description="素材中文名")
     text: str = Field(default="", description="正文")
