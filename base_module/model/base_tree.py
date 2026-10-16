@@ -2,13 +2,16 @@ from sqlmodel import Field
 from .base_model import BaseModel
 
 
+## 只有多语环境下才用_cn后缀
 
 class BaseTree(BaseModel):
     """实体基类：包含所有表的公共字段"""
 
     p_id: int = Field(default=None, index=True, description="父编码")
     name: str = Field(description="名称")
+    name_cn: str = Field(description="中文名称")
     full_path:str = Field(default='', index=True, max_length=255, description="完整路径")
+    full_path_cn:str = Field(default='', index=True, max_length=255, description="完整路径中文")
     level: int = Field(default=1, description="层级")
     sort: str = Field(default=1, description="排序, 使用分数索引")
     lv1: int = Field(default=None, index=True, description="一级编码")
