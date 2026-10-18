@@ -2,7 +2,8 @@
 
 | 类型 | 落点 | 用在哪 |
 |------|------|--------|
-| `PayloadJSON` | SQLite 落 TEXT / MySQL 落 JSON | 任务的 `input_data` / `output_data` |
+| `PayloadJSON` | SQLite 落 TEXT / MySQL 落 JSON | 任务的 `input_data` / `output_data` / `extra_dict` |
+|  |  | （`BaseTask` 上以 `sa_type=PayloadJSON` 声明，三列都可空） |
 
 `PayloadJSON` 只做「写」这一侧的兜底：pydantic 对象自动 dump 成 JSON，
 dict / list / None 原样放行。读这一侧不在这里还原成对象 —— 表模型不知道 `T` 是谁

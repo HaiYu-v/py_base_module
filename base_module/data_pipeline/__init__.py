@@ -7,14 +7,18 @@ from data_pipeline import BaseTask, TaskState
 ```
 
 ⚠ **`BaseTask` 是基类、不是一张表**（用户口径：任务表在本地 sqlite，**一种任务一张表**）：
-用它的项目各自建表，列从这儿继承，载荷两列用 `payload_column()` 每张表各造一个：
+用它的项目各自建表，列从这儿继承 —— **载荷三列（`input_data` / `output_data` / `extra_dict`）
+基类上已经声明好了、都可空，子类不用再写**：
 
 ```python
-from data_pipeline import BaseTask, payload_column
+from data_pipeline import BaseTask
 
 class MaterialSaveTask(BaseTask, table=True):
     __tablename__ = "material_save_task"
-    input_data: Optional[MaterialSave] = Field(default=None, sa_column=payload_column("启动数据"))
+    # input_data / output_data / extra_dict 继承自 BaseTask，不用声明
+
+    # 想让载荷类型写实（可选，老写法也仍然兼容，记得 import payload_column）：
+    # input_data: Optional[MaterialSave] = Field(default=None, sa_column=payload_column("启动数据"))
 ```
 
 公共列（`id` / `version` / `creator_id` / `create_time` / `update_time` / `dr` / `prompt`）

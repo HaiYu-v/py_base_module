@@ -7,8 +7,9 @@
 
 ⚠ **一种任务一张表**（用户口径）：具体任务表（`youtube_task` / `material_save_task` /
 `listening_task`）由**用它的项目**各自在 `reader_common/model/` 里定义，继承 `BaseTask`。
-所以这里不再有「通用任务表」；`payload_column()` 就是给那些表造载荷列的小工具
-（SQLAlchemy 的 Column 对象不能跨表共用，必须每张表各造一个）。
+载荷三列（`input_data` / `output_data` / `extra_dict`）**在 `BaseTask` 上声明一次、都可空**，
+子类不用再写；`payload_column()` 只在「子类想覆盖成写实的载荷类型 / 老代码」时用
+（⚠ 子类覆盖时**每次调用都要新造一个** Column —— SQLAlchemy 的 Column 对象不能跨表共用）。
 
 ⚠ 表模型**立即导入**（不惰性）：`create_all` 只建已注册的表，漏导一个定义表的模型模块，
 库里就会少建表 —— 各项目的 `reader_common/model/__init__.py` 就是干这个的。

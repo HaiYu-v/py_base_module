@@ -53,7 +53,8 @@ task.finish(CoverData(title="...", blocks=[...]))
 data = task.output_payload(CoverData)                     # 取回来校验成 CoverData
 ```
 
-⚠ 四条 SQLModel 0.0.48 的实测限制（都在 `tmp/probe_*.py` 里跑过），决定了上面这套写法：
+⚠ 五条 SQLModel 0.0.48 的实测限制（验收脚本在 `tmp/check_base_task_payloads.py`），
+决定了上面这套写法：
 
 1. **`BaseTask[X]` 只能当「注解」用，不能当「值」用**。
    一旦在运行期真去下标（`BaseTask[X](...)`、`isinstance`、`select(BaseTask[X])`），
@@ -63,8 +64,9 @@ data = task.output_payload(CoverData)                     # 取回来校验成 C
 2. **不能靠泛型参数「长出」具体子类**：`class CoverTask(BaseTask[CoverData], table=True)`
    会抛 `ValueError: typing.Any has no matching SQLAlchemy type`。
    → 子类写 `class CoverTask(BaseTask, table=True)`，**不要**下标。
-3. **`Optional[T]` 不会自己变成 SQLAlchemy 类型**：字段必须显式给 `sa_column`，
-   而且裸 `Column(JSON)` 塞 pydantic 对象会 `TypeError: Object of type X is not JSON serializable`
+3. **`Optional[T]` 不会自己变成 SQLAlchemy 类型**（`T` 是 TypeVar，`ValueError: ... has no
+   matching SQLAlchemy type`）：字段必须显式给 **`sa_type=PayloadJSON`**（或 `sa_column`，
+   但见限制 5），而且裸 `Column(JSON)` 塞 pydantic 对象会 `TypeError: Object of type X is not JSON serializable`
    （pydantic 的 `field_serializer` 也救不了，SQLAlchemy 的 JSON 列不走它）。
    → 走 `column_types.PayloadJSON`，写入时自动 dump。
 4. **`table=True` 的表模型 `__init__` 不走 pydantic 校验**：`T(a="xx")` 不报错、不转型，
@@ -74,6 +76,12 @@ data = task.output_payload(CoverData)                     # 取回来校验成 C
    → **「补 deadline」这类默认值不能靠 validator**，得由写入口显式调方法：见 `ensure_deadline()`
    （`task_mapper.enqueue` 里调）—— 那里以前是 model_validator，等于从来没生效过
    （实测老库所有行的 `deadline` 都是 NULL）。
+5. **一个 `Column` 对象不能同时挂到两张表上**：`Field(..., sa_column=Column(...))` 是**共用同一个
+   Column 实例**，第二张任务表建表时报
+   ``Column object 'input_data' already assigned to Table 'xxx'``。
+   → **在基类声明载荷三列只能走 `sa_type`**：SQLModel 建每张表时按 `sa_type` **各造一个新
+   Column**（`sqlmodel.main.get_column_from_field`），所以「一种任务一张表」也能共享一份声明。
+   反过来，子类**覆盖**时用 `sa_column=payload_column(...)` 没问题（那张表只此一份）。
 
 因为 `T` 在运行期无从得知（限制 1/2），**「JSON → 对象」的还原显式挂在方法上**：
 `input_payload(model)` / `output_payload(model)`，把模型类传进去即可。
@@ -90,8 +98,8 @@ data = task.output_payload(CoverData)                     # 取回来校验成 C
   ⚠ 约束名 / 索引名**各表必须唯一**（同名会撞）—— 那是每张表自己的事，别指望基类带。
 - 基类 `dr`（删除标记）查询时一律带 `dr == "N"` 过滤。
 
-库方言：`input_data` / `output_data` 走 `column_types.PayloadJSON`（impl 是 SQLAlchemy 的 `JSON`）——
-SQLite 落 TEXT、MySQL 落 JSON，两边都建得出来。
+库方言：`input_data` / `output_data` / `extra_dict` 三列走 `column_types.PayloadJSON`
+（impl 是 SQLAlchemy 的 `JSON`）—— SQLite 落 TEXT、MySQL 落 JSON，两边都建得出来。
 （MySQL 建短文本列必须给长度，所以 `task_name` / `run_id` 都显式写了 `max_length`。）
 """
 
@@ -122,10 +130,15 @@ OPEN_STATES: tuple[str, ...] = ("pending", "running")
 def payload_column(comment: str = "") -> Column:
     """造一个**载荷 / 附加信息**用的 JSON 列（底层是 ``column_types.PayloadJSON``）。
 
-    ⚠⚠ **每次调用都新造一个 Column**（不能写成模块级常量、也不能放基类上共用）：
+    ⚠ 载荷三列（`input_data` / `output_data` / `extra_dict`）**已经在 `BaseTask` 上声明好了**
+    （走 `sa_type`，见那三列的说明）—— 子类**不用**再声明。本工具留给两种场景：
+
+    - 子类想把载荷类型写实（`Optional[MaterialSave]`）时覆盖基类的列；
+    - 老代码（基类还没有这三列时写的 `sa_column=payload_column("启动数据")`）继续能跑。
+
+    ⚠⚠ **每次调用都新造一个 Column**（不能写成模块级常量、也不能拿同一个 Column 挂两张表）：
     SQLAlchemy 的列对象**不能同时挂到两张表**上 —— 共用的话第二张表建表时直接报
     ``Column object 'input_data' already assigned to Table 'xxx'``。
-    所以「一种任务一张表」下，每张表自己写 ``sa_column=payload_column("启动数据")``。
     """
     return Column(PayloadJSON, nullable=True, comment=comment or None)
 
@@ -146,10 +159,10 @@ class BaseTask(BaseModel, Generic[PayloadT]):
 
     ⚠⚠ **它不是一张表**（用户口径：「任务表存在本地的 sqlite，**一种任务一张表**」）：
     本类**没有** ``table=True`` / ``__tablename__`` —— 具体任务各自建表（如
-    ``youtube_task`` / ``material_save_task`` / ``listening_task``），列（含载荷两列）
+    ``youtube_task`` / ``material_save_task`` / ``listening_task``），列（含载荷三列）
     全从这儿继承。
 
-    子类只需给两样：
+    子类只需给表名与自己的约束 / 索引：
 
     ```python
     class MaterialSaveTask(BaseTask, table=True):
@@ -158,11 +171,14 @@ class BaseTask(BaseModel, Generic[PayloadT]):
             UniqueConstraint("uni_key", name="uq_material_save_task_uni_key"),
             Index("ix_material_save_task_state_deadline", "state", "deadline"),
         )
+        # input_data / output_data / extra_dict 不用写：基类上已经有了、且都可空
+        # （想让载荷类型写实再覆盖：input_data: Optional[MaterialSave] = Field(
+        #      default=None, sa_column=payload_column("启动数据"))）
     ```
 
     ⚠ `Generic[PayloadT]` 必须写在类名里（子类**不要**再写 ``BaseTask[MaterialSave]`` ——
     运行期下标会真的去建泛型子模型，SQLModel 直接报错，见本文件顶部的取舍）。
-    载荷列是显式的 ``Column(PayloadJSON)``，所以不靠 `PayloadT` 定列类型。
+    载荷三列是显式的 ``sa_type=PayloadJSON``（不是 `PayloadT`），所以列类型不靠泛型定。
     """
 
     #: 显式重声明主键：与基类一致，只是让各表的列一眼看全
@@ -220,18 +236,48 @@ class BaseTask(BaseModel, Generic[PayloadT]):
 
     #: ⚠ 别把字段叫 desc：基类有 desc() 方法，同名会遮蔽；说明列叫 description 那一套
     #:
-    #: ⚠⚠ **载荷两列与 `extra_dict` 由每张任务表自己声明**（不在基类上）：
-    #: SQLAlchemy 的 ``Column`` 对象**不能同时挂到两张表**上（第二张表建表时直接报
-    #: ``Column object 'input_data' already assigned to Table 'xxx'``）。
-    #: 所以每张表都写：
+    #: ——— 载荷 / 附加信息（三列**必须都有**，声明一次、所有任务表自动继承）———
     #:
-    #: ```python
-    #:     input_data: Optional[MaterialSave] = Field(default=None, sa_column=payload_column("启动数据"))
-    #:     output_data: Optional[MaterialSave] = Field(default=None, sa_column=payload_column("结束数据"))
-    #:     extra_dict: dict[str, Any] = Field(default_factory=dict, sa_column=payload_column("附加信息，默认 {}"))
-    #: ```
-    #: （``payload_column`` 是下面的小工具：每次调用**新造一个** Column，不共用。）
-    #: 好处顺带有了：载荷类型能按表写实（``Optional[MaterialSave]``），一眼看得出这张表装什么。
+    #: | 列 | 说明 |
+    #: |----|------|
+    #: | `input_data` | 启动数据（json）：跑之前输入给它什么 |
+    #: | `output_data` | 结束数据（json）：跑完之后产出什么 |
+    #: | `extra_dict` | 附加信息（json）：两份数据之外的杂项，默认 `{}` |
+    #:
+    #: 三列**都可空**（`nullable=True`）——「这一步没有入参 / 还没有产出」得跟「设过空值」分得开。
+    #:
+    #: ⚠⚠ **只能写 `sa_type=PayloadJSON`，绝不能再挂 `sa_column=payload_column(...)`**：
+    #: `sa_column` 是把**同一个 Column 对象**挂到每一张表上，第二张任务表建表时直接报
+    #: ``Column object 'input_data' already assigned to Table 'xxx'``。给 `sa_type` 时
+    #: SQLModel 是**建每张表时各造一个新 Column**（`sqlmodel.main.get_column_from_field`），
+    #: 所以「一种任务一张表」下这三列才能放在非表的基类上共用一份声明
+    #: （验收脚本：`tmp/check_base_task_payloads.py` —— 两张子表的 `input_data` 不是同一个
+    #: Column 对象、三列都可空、pydantic 对象能落库能还原，22 项全过）。
+    #:
+    #: 子类**不需要**再声明这三列；想让载荷类型写实（`Optional[MaterialSave]`）时再各自覆盖，
+    #: 老写法 `sa_column=payload_column("启动数据")` 也照样覆盖得动（向后兼容）。
+
+    input_data: Optional[PayloadT] = Field(
+        default=None, sa_type=PayloadJSON, description="启动数据（json）：跑之前输入给它什么"
+    )
+    output_data: Optional[PayloadT] = Field(
+        default=None, sa_type=PayloadJSON, description="结束数据（json）：跑完之后产出什么"
+    )
+    #: ⚠ 注解**故意不给 `Optional`**（用的人直接 `task.extra_dict["k"]`，不必先判空），
+    #: 但**列是可空的**：跟以前每张表 `payload_column()` 出来的列一个口径；
+    #: 不给值时 Python 侧默认 `{}`（`default_factory=dict`）。
+    #:
+    #: ⚠⚠ **改它得整个赋值**：SQLAlchemy 的变更检测只看「这个属性有没有被重新赋值」，
+    #: 不看 dict 里面的内容变没变 —— `task.extra_dict["retry"] = 2` 再 commit 不会生成
+    #: UPDATE，症状是「**内存里看着改了、库里还是老值**」（三列同一个脾气，不是新毛病）。
+    #: 要写就整个赋值：`task.extra_dict = {**task.extra_dict, "retry": 2}`
+    #: （复现见 `tmp/demo_json_inplace.py`）。
+    extra_dict: dict[str, Any] = Field(
+        default_factory=dict,
+        sa_type=PayloadJSON,
+        nullable=True,
+        description="附加信息（json）：两份数据之外的杂项，默认 {}",
+    )
 
     state: str = Field(
         default=TaskState.PENDING.value,
